@@ -35,7 +35,6 @@ dockerignore.txt
 .dockerignore
 docker-compose.yml
 deploy.md
-nginx.txt
 metadata.json
 
 # Logs

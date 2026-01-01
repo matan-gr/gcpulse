@@ -60,13 +60,19 @@ COPY nginx.txt /etc/nginx/nginx.conf
 RUN nginx -t
 
 # Create startup script to run both Nginx and Node
-# We start Nginx in the background (default behavior) and then run the Node app
+# We start Node in the background and wait for it to be ready before starting Nginx
 RUN echo "#!/bin/sh" > start.sh && \
     echo "export NODE_ENV=production" >> start.sh && \
-    echo "echo 'Starting Nginx...'" >> start.sh && \
-    echo "nginx" >> start.sh && \
     echo "echo 'Starting Node.js server...'" >> start.sh && \
-    echo "npm start" >> start.sh && \
+    echo "npm start &" >> start.sh && \
+    echo "NODE_PID=\$!" >> start.sh && \
+    echo "# Wait for Node to be ready" >> start.sh && \
+    echo "echo 'Waiting for Node.js to start on port 3000...'" >> start.sh && \
+    echo "until nc -z 127.0.0.1 3000; do" >> start.sh && \
+    echo "  sleep 0.5" >> start.sh && \
+    echo "done" >> start.sh && \
+    echo "echo 'Node.js is up! Starting Nginx...'" >> start.sh && \
+    echo "nginx -g 'daemon off;'" >> start.sh && \
     chmod +x start.sh
 
 # Expose ports (Nginx on 80, Node on 3000)
