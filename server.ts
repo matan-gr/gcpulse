@@ -1,8 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import Parser from "rss-parser";
-import * as cheerio from 'cheerio';
-import fetch from 'node-fetch';
 
 const app = express();
 const PORT = 3000;

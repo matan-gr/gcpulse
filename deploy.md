@@ -7,6 +7,7 @@ This guide provides step-by-step instructions for deploying the GCP Pulse applic
 ```
 .
 ├── Dockerfile.txt       # Docker build instructions (rename to Dockerfile)
+├── dockerignore.txt     # Files to ignore during Docker build (rename to .dockerignore)
 ├── deploy.md            # This guide
 ├── index.html           # Entry HTML
 ├── metadata.json        # App metadata
@@ -52,12 +53,13 @@ The `Dockerfile` uses a **multi-stage build**:
     *   Run `gcloud auth login`
     *   Run `gcloud config set project YOUR_PROJECT_ID`
 
-### Step 1: Prepare the Dockerfile
+### Step 1: Prepare Docker Files
 
-Rename `Dockerfile.txt` to `Dockerfile`:
+Rename `Dockerfile.txt` to `Dockerfile` and `dockerignore.txt` to `.dockerignore`:
 
 ```bash
 mv Dockerfile.txt Dockerfile
+mv dockerignore.txt .dockerignore
 ```
 
 ### Step 2: Build and Push the Image

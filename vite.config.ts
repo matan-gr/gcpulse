@@ -20,12 +20,16 @@ export default defineConfig(({mode}) => {
       },
     },
     build: {
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom', 'motion', 'lucide-react'],
-            ui: ['@tanstack/react-query', 'recharts', 'sonner'],
-            utils: ['dompurify']
+            'react-vendor': ['react', 'react-dom'],
+            'motion': ['motion'],
+            'recharts': ['recharts'],
+            'genai': ['@google/genai'],
+            'ui-libs': ['lucide-react', 'sonner', '@tanstack/react-query'],
+            'markdown': ['react-markdown', 'dompurify']
           },
         },
       },
