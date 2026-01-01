@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy, useRef } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { useFeed, useDeprecations, useSecurityBulletins, useArchitectureUpdates, useIncidents } from './hooks/useFeed';
@@ -43,7 +43,7 @@ function AppContent() {
   const [isColumnCustomizerOpen, setIsColumnCustomizerOpen] = useState(false);
 
   // Data Fetching with React Query
-  const { data: feed, isLoading: feedLoading, error: queryError, refetch: refetchFeed } = useFeed();
+  const { data: feed, isLoading: feedLoading, error: queryError, refetch: refetchFeed, isRefetching: feedRefetching } = useFeed();
   const { data: deprecations, isLoading: deprecationsLoading, error: deprecationsError } = useDeprecations();
   const { data: securityBulletins, isLoading: securityLoading, error: securityError } = useSecurityBulletins();
   const { data: architectureUpdates, isLoading: architectureLoading, error: architectureError } = useArchitectureUpdates();
@@ -54,6 +54,15 @@ function AppContent() {
   // Custom Hooks
   const { prefs, updatePrefs, toggleCategorySubscription, toggleSavedPost, clearSavedPosts } = useUserPreferences();
   const { summarizingId, analyses, summaryModal, handleSummarize, closeSummaryModal } = useSummarizer();
+
+  // Feed Update Toast
+  const prevRefetching = useRef(false);
+  useEffect(() => {
+    if (prevRefetching.current && !feedRefetching && !queryError) {
+      toast.success("Feed updated");
+    }
+    prevRefetching.current = feedRefetching;
+  }, [feedRefetching, queryError]);
 
   // Error Handling
   useEffect(() => {
@@ -82,6 +91,8 @@ function AppContent() {
 
   const handleDateRangeChange = (range: { start: string; end: string } | null) => {
     updatePrefs({ filterDateRange: range });
+    if (range) toast.success("Date filter applied");
+    else toast.info("Date filter cleared");
   };
 
   const handleExportCSV = () => {
@@ -227,7 +238,6 @@ function AppContent() {
 
   const handleSave = (item: FeedItem) => {
     toggleSavedPost(item.link);
-    toast.success(prefs.savedPosts.includes(item.link) ? "Removed from Read Later" : "Added to Read Later");
   };
 
   if (queryError) {

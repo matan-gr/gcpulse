@@ -4,6 +4,11 @@ import Parser from "rss-parser";
 
 const app = express();
 const PORT = 3000;
+const isProduction = process.env.NODE_ENV === 'production';
+
+console.log(`Starting server in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+
 const FEEDS = [
   { url: "https://cloudblog.withgoogle.com/rss/", name: "Cloud Blog" },
   { url: "https://blog.google/products/google-cloud/rss/", name: "Product Updates" },
@@ -186,7 +191,7 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 });
 
 // Vite middleware for development
-if (process.env.NODE_ENV !== "production") {
+if (!isProduction) {
   const vite = await createViteServer({
     server: { 
       middlewareMode: true,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export interface UserPreferences {
   viewMode: 'grid' | 'list';
@@ -41,29 +42,44 @@ export function useUserPreferences() {
   const toggleCategorySubscription = (category: string) => {
     setPrefs(prev => {
       const exists = prev.subscribedCategories.includes(category);
-      return {
-        ...prev,
-        subscribedCategories: exists
-          ? prev.subscribedCategories.filter(c => c !== category)
-          : [...prev.subscribedCategories, category]
-      };
+      if (exists) {
+        toast.success(`Unsubscribed from ${category}`);
+        return {
+          ...prev,
+          subscribedCategories: prev.subscribedCategories.filter(c => c !== category)
+        };
+      } else {
+        toast.success(`Subscribed to ${category}`);
+        return {
+          ...prev,
+          subscribedCategories: [...prev.subscribedCategories, category]
+        };
+      }
     });
   };
 
   const toggleSavedPost = (link: string) => {
     setPrefs(prev => {
       const exists = prev.savedPosts.includes(link);
-      return {
-        ...prev,
-        savedPosts: exists
-          ? prev.savedPosts.filter(l => l !== link)
-          : [...prev.savedPosts, link]
-      };
+      if (exists) {
+        toast.success("Removed from Read Later");
+        return {
+          ...prev,
+          savedPosts: prev.savedPosts.filter(l => l !== link)
+        };
+      } else {
+        toast.success("Added to Read Later");
+        return {
+          ...prev,
+          savedPosts: [...prev.savedPosts, link]
+        };
+      }
     });
   };
 
   const clearSavedPosts = () => {
     setPrefs(prev => ({ ...prev, savedPosts: [] }));
+    toast.success("Reading list cleared");
   };
 
   return {

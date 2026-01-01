@@ -62,6 +62,7 @@ RUN nginx -t
 # Create startup script to run both Nginx and Node
 # We start Nginx in the background (default behavior) and then run the Node app
 RUN echo "#!/bin/sh" > start.sh && \
+    echo "export NODE_ENV=production" >> start.sh && \
     echo "echo 'Starting Nginx...'" >> start.sh && \
     echo "nginx" >> start.sh && \
     echo "echo 'Starting Node.js server...'" >> start.sh && \

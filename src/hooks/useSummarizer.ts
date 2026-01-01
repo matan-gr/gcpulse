@@ -37,6 +37,8 @@ export const useSummarizer = () => {
       isStreaming: true
     });
 
+    toast.info("Analyzing content...");
+
     try {
       const contentToSummarize = item.content || item.contentSnippet || item.title;
       const isIncident = item.source === 'Service Health';
