@@ -1,6 +1,8 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import Parser from "rss-parser";
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 const PORT = 3000;
@@ -206,8 +208,22 @@ if (!isProduction) {
   // Serve static files in production
   app.use(express.static('dist'));
   
-  // SPA fallback
+  // SPA fallback with runtime env injection
   app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: 'dist' });
+    const indexPath = path.resolve('dist', 'index.html');
+    fs.readFile(indexPath, 'utf8', (err, html) => {
+      if (err) {
+        console.error('Error reading index.html:', err);
+        return res.status(500).send('Internal Server Error');
+      }
+      
+      // Inject env vars
+      const injectedHtml = html.replace(
+        '<head>',
+        `<head><script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`
+      );
+      
+      res.send(injectedHtml);
+    });
   });
 }

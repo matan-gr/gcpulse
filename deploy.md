@@ -75,7 +75,7 @@ gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/gcp-pulse
 
 ### Step 3: Deploy Service
 
-Deploy the container to Cloud Run. **Crucially, we expose port 80** because Nginx is our entry point.
+Deploy the container to Cloud Run.
 
 ```bash
 gcloud run deploy gcp-pulse-service \
@@ -83,14 +83,13 @@ gcloud run deploy gcp-pulse-service \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
-  --port 80 \
   --set-env-vars GEMINI_API_KEY="your_actual_gemini_api_key_here"
 ```
 
 **Configuration Flags:**
 *   `--allow-unauthenticated`: Makes the app public. Remove for internal-only apps.
-*   `--port 80`: **IMPORTANT**. Points traffic to Nginx, which then proxies to the app.
 *   `--set-env-vars`: **Required**. The app needs `GEMINI_API_KEY` to function.
+*   *Note*: Cloud Run automatically injects the `PORT` environment variable (default 8080), and our container dynamically configures Nginx to listen on it. No manual port flag is needed.
 
 ### Step 4: Verify
 

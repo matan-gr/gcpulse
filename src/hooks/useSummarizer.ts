@@ -3,7 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { toast } from 'sonner';
 import { FeedItem, AnalysisResult } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = window.ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 export const useSummarizer = () => {
   const [summarizingId, setSummarizingId] = useState<string | null>(null);

@@ -33,7 +33,8 @@ const DashboardView = lazy(() => import('./views/DashboardView').then(module => 
 const ToolsView = lazy(() => import('./views/ToolsView').then(module => ({ default: module.ToolsView })));
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = window.ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 function AppContent() {
   // UI State
