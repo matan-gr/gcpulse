@@ -1,26 +1,65 @@
-import React, { useState, useMemo } from 'react';
-import { CheckCircle, XCircle, AlertTriangle, Info, ArrowRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { CheckCircle, XCircle, AlertTriangle, Info, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useGKEVersions } from '../../hooks/useGKEVersions';
 
 export const GKESkewValidator: React.FC = () => {
-  const [controlPlaneVersion, setControlPlaneVersion] = useState<string>('1.30');
-  const [nodeVersion, setNodeVersion] = useState<string>('1.27');
+  const { data: channels, isLoading, isError } = useGKEVersions();
+  const [controlPlaneVersion, setControlPlaneVersion] = useState<string>('');
+  const [nodeVersion, setNodeVersion] = useState<string>('');
 
-  // Generate a list of recent GKE minor versions
-  const versions = useMemo(() => {
-    const minors = [];
-    for (let i = 32; i >= 24; i--) {
-      minors.push(`1.${i}`);
+  // Extract available minor versions from the fetched data
+  const availableVersions = useMemo(() => {
+    if (!channels) return [];
+    
+    const versionSet = new Set<string>();
+    
+    channels.forEach(channel => {
+      // Add current version
+      if (channel.current.version !== 'Unknown' && channel.current.version !== 'Error') {
+        const match = channel.current.version.match(/(\d+\.\d+)/);
+        if (match) versionSet.add(match[1]);
+      }
+      // Add history versions
+      channel.history.forEach(hist => {
+        if (hist.version !== 'Unknown') {
+          const match = hist.version.match(/(\d+\.\d+)/);
+          if (match) versionSet.add(match[1]);
+        }
+      });
+    });
+
+    // If no data, fallback to a sensible default range
+    if (versionSet.size === 0) {
+       return ['1.30', '1.29', '1.28', '1.27', '1.26', '1.25', '1.24'];
     }
-    return minors;
-  }, []);
+    
+    // Sort descending
+    return Array.from(versionSet).sort((a, b) => parseFloat(b) - parseFloat(a));
+  }, [channels]);
+
+  // Set defaults once data is loaded
+  useEffect(() => {
+    if (availableVersions.length > 0 && !controlPlaneVersion) {
+      setControlPlaneVersion(availableVersions[0]);
+      setNodeVersion(availableVersions[1] || availableVersions[0]);
+    }
+  }, [availableVersions, controlPlaneVersion]);
 
   const result = useMemo(() => {
-    const cpMinor = parseInt(controlPlaneVersion.split('.')[1], 10);
-    const nodeMinor = parseInt(nodeVersion.split('.')[1], 10);
-    const diff = cpMinor - nodeMinor;
+    if (!controlPlaneVersion || !nodeVersion) return null;
 
-    if (nodeMinor > cpMinor) {
+    const cpMinor = parseFloat(controlPlaneVersion);
+    const nodeMinor = parseFloat(nodeVersion);
+    const diff = Math.round((cpMinor - nodeMinor) * 100) / 100; // Handle float precision
+    
+    // Convert to integer difference for logic (e.g. 1.30 - 1.27 = 0.03 -> 3 minor versions)
+    // Actually, simple subtraction of minor parts is safer:
+    const cpMinorInt = parseInt(controlPlaneVersion.split('.')[1], 10);
+    const nodeMinorInt = parseInt(nodeVersion.split('.')[1], 10);
+    const minorDiff = cpMinorInt - nodeMinorInt;
+
+    if (minorDiff < 0) {
       return {
         status: 'invalid',
         title: 'Invalid Configuration',
@@ -32,7 +71,7 @@ export const GKESkewValidator: React.FC = () => {
       };
     }
 
-    if (diff <= 3) {
+    if (minorDiff <= 3) {
       return {
         status: 'valid',
         title: 'Supported Configuration',
@@ -55,19 +94,36 @@ export const GKESkewValidator: React.FC = () => {
     };
   }, [controlPlaneVersion, nodeVersion]);
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+        <Loader2 className="animate-spin mb-4 text-blue-600" size={32} />
+        <p>Loading latest GKE versions...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="card p-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <div className="flex items-start space-x-4 mb-8">
-          <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600">
-            <AlertTriangle size={24} />
+      <div className="card p-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xl rounded-2xl">
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-start space-x-4">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600">
+              <AlertTriangle size={24} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">GKE Version Skew Validator</h2>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">
+                Validate upgrade paths against the official <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels#version_skew_policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">GKE Version Skew Policy</a>.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">GKE Version Skew Validator</h2>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">
-              Validate upgrade paths against the official <a href="https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels#version_skew_policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">GKE Version Skew Policy</a>.
-            </p>
-          </div>
+          {availableVersions.length > 0 && (
+             <div className="text-xs text-slate-400 flex items-center bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-full">
+               <RefreshCw size={12} className="mr-1.5" />
+               Synced with official feeds
+             </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -80,9 +136,9 @@ export const GKESkewValidator: React.FC = () => {
               <select
                 value={controlPlaneVersion}
                 onChange={(e) => setControlPlaneVersion(e.target.value)}
-                className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer transition-all hover:border-blue-400"
               >
-                {versions.map(v => (
+                {availableVersions.map(v => (
                   <option key={`cp-${v}`} value={v}>{v}</option>
                 ))}
               </select>
@@ -101,9 +157,9 @@ export const GKESkewValidator: React.FC = () => {
               <select
                 value={nodeVersion}
                 onChange={(e) => setNodeVersion(e.target.value)}
-                className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+                className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-lg font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer transition-all hover:border-blue-400"
               >
-                {versions.map(v => (
+                {availableVersions.map(v => (
                   <option key={`node-${v}`} value={v}>{v}</option>
                 ))}
               </select>
@@ -115,25 +171,27 @@ export const GKESkewValidator: React.FC = () => {
         </div>
 
         {/* Result Card */}
-        <motion.div
-          key={`${controlPlaneVersion}-${nodeVersion}`}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`p-6 rounded-xl border-2 ${result.bgColor} ${result.borderColor} flex items-start space-x-4`}
-        >
-          <result.icon size={32} className={`${result.color} flex-shrink-0 mt-0.5`} />
-          <div>
-            <h3 className={`text-lg font-bold ${result.color} mb-1`}>{result.title}</h3>
-            <p className="text-slate-700 dark:text-slate-300 font-medium">{result.message}</p>
-            
-            <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center text-sm text-slate-500 dark:text-slate-400">
-              <Info size={16} className="mr-2" />
-              <span>
-                Difference: <span className="font-mono font-bold text-slate-900 dark:text-white">{parseInt(controlPlaneVersion.split('.')[1]) - parseInt(nodeVersion.split('.')[1])}</span> minor versions
-              </span>
+        {result && (
+          <motion.div
+            key={`${controlPlaneVersion}-${nodeVersion}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-6 rounded-xl border-2 ${result.bgColor} ${result.borderColor} flex items-start space-x-4`}
+          >
+            <result.icon size={32} className={`${result.color} flex-shrink-0 mt-0.5`} />
+            <div>
+              <h3 className={`text-lg font-bold ${result.color} mb-1`}>{result.title}</h3>
+              <p className="text-slate-700 dark:text-slate-300 font-medium">{result.message}</p>
+              
+              <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                <Info size={16} className="mr-2" />
+                <span>
+                  Difference: <span className="font-mono font-bold text-slate-900 dark:text-white">{parseInt(controlPlaneVersion.split('.')[1]) - parseInt(nodeVersion.split('.')[1])}</span> minor versions
+                </span>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm text-slate-500 dark:text-slate-400">
           <p className="font-bold mb-2">Policy Summary:</p>

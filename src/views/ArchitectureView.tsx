@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { FeedItem } from '../types';
-import { FeedCard } from '../components/FeedCard';
-import { Layers, ArrowRight, Star, Zap } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Layers, ArrowRight, Star, Zap, Box, Grid, Server, Database, Cloud, Shield, Cpu, Globe, ExternalLink, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useArchitectureView } from '../hooks/useArchitectureView';
 
 interface ArchitectureViewProps {
@@ -24,170 +23,249 @@ export const ArchitectureView: React.FC<ArchitectureViewProps> = ({
   savedPosts,
   isPresentationMode
 }) => {
-  const { featuredItems, standardItems } = useArchitectureView(items);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const cats = new Set<string>(['All']);
+    items.forEach(item => {
+      item.categories?.forEach(c => cats.add(c));
+    });
+    return Array.from(cats).sort();
+  }, [items]);
+
+  // Filter items
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === 'All') return items;
+    return items.filter(item => item.categories?.includes(selectedCategory));
+  }, [items, selectedCategory]);
+
+  const featuredItem = filteredItems[0];
+  const gridItems = filteredItems.slice(1);
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+          <div key={i} className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section - Top 4 Items */}
-      <section>
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
-            <Star size={24} className="fill-indigo-600 dark:fill-indigo-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Featured Architecture</h2>
+    <div className="space-y-8 max-w-7xl mx-auto">
+      
+      {/* Header & Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center">
+            <Box className="mr-3 text-indigo-600 dark:text-indigo-400" size={32} />
+            Architecture Center
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
+            Reference architectures, design patterns, and best practices.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Main Hero Card (Item 0) */}
-          {featuredItems[0] && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="lg:col-span-2 relative group overflow-hidden rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar max-w-full md:max-w-xl">
+          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 mr-2">
+            <Filter size={18} />
+          </div>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 dark:shadow-none'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/90 to-purple-600/90 opacity-100 transition-opacity group-hover:opacity-95" />
-              
-              <div className="relative p-8 md:p-12 h-full flex flex-col justify-center text-white">
-                <div className="flex items-center space-x-2 mb-4">
-                  <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-bold uppercase tracking-wider border border-white/30">
-                    Latest Release
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Featured Hero */}
+      <AnimatePresence mode="wait">
+        {featuredItem && (
+          <motion.div
+            key={featuredItem.id || 'featured'}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative rounded-2xl overflow-hidden shadow-xl group"
+          >
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-slate-900 dark:bg-slate-950">
+              <div className="absolute inset-0 opacity-20" 
+                style={{ 
+                  backgroundImage: 'radial-gradient(#6366f1 1px, transparent 1px)', 
+                  backgroundSize: '20px 20px' 
+                }} 
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/90 to-transparent" />
+            </div>
+
+            <div className="relative p-8 md:p-12 flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-1 space-y-6">
+                <div className="flex items-center space-x-3">
+                  <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-mono font-bold uppercase tracking-wider">
+                    Featured Pattern
                   </span>
-                  <span className="text-indigo-100 text-sm font-medium">
-                    {new Date(featuredItems[0].isoDate).toLocaleDateString()}
+                  <span className="text-slate-400 text-sm font-mono">
+                    {new Date(featuredItem.isoDate).toLocaleDateString()}
                   </span>
                 </div>
-                
-                <h3 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                  <a href={featuredItems[0].link} target="_blank" rel="noopener noreferrer" className="hover:underline decoration-2 underline-offset-4 decoration-indigo-300">
-                    {featuredItems[0].title}
-                  </a>
+
+                <h3 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                  {featuredItem.title}
                 </h3>
-                
-                <p className="text-indigo-50 text-lg mb-8 max-w-3xl line-clamp-3 leading-relaxed">
-                  {featuredItems[0].contentSnippet}
+
+                <p className="text-slate-300 text-lg leading-relaxed max-w-2xl line-clamp-3">
+                  {featuredItem.contentSnippet}
                 </p>
 
-                <div className="flex flex-wrap gap-3 mb-8">
-                  {featuredItems[0].categories?.slice(0, 4).map(cat => (
-                    <span key={cat} className="px-3 py-1 rounded-md bg-white/10 border border-white/20 text-sm font-medium text-white">
+                <div className="flex flex-wrap gap-2">
+                  {featuredItem.categories?.map(cat => (
+                    <span key={cat} className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium">
                       {cat}
                     </span>
                   ))}
                 </div>
 
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4 pt-4">
                   <a 
-                    href={featuredItems[0].link}
+                    href={featuredItem.link}
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="px-6 py-3 bg-white text-indigo-600 font-bold rounded-xl shadow-lg hover:bg-indigo-50 transition-colors flex items-center"
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-900/20 transition-all hover:scale-105 flex items-center group/btn"
                   >
-                    Read Guide <ArrowRight size={18} className="ml-2" />
+                    View Architecture <ArrowRight size={18} className="ml-2 group-hover/btn:translate-x-1 transition-transform" />
                   </a>
                   <button 
-                    onClick={() => onSummarize(featuredItems[0])}
-                    className="px-6 py-3 bg-indigo-700/50 hover:bg-indigo-700/70 text-white font-bold rounded-xl border border-indigo-500/50 backdrop-blur-sm transition-colors flex items-center"
+                    onClick={() => onSummarize(featuredItem)}
+                    disabled={summarizingId === featuredItem.link}
+                    className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition-colors flex items-center disabled:opacity-50"
                   >
-                    <Zap size={18} className="mr-2" /> AI Summary
+                    <Zap size={18} className={`mr-2 ${summarizingId === featuredItem.link ? 'animate-spin' : 'text-yellow-400'}`} />
+                    {summarizingId === featuredItem.link ? 'Analyzing...' : 'AI Summary'}
                   </button>
                 </div>
               </div>
-            </motion.div>
-          )}
 
-          {/* Secondary Featured Cards (Items 1-3) */}
-          {featuredItems.slice(1).map((item, index) => (
-            <motion.div
-              key={item.id || item.link}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index + 1) * 0.1 }}
-              className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300 group"
-            >
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex space-x-2">
-                    {item.categories?.slice(0, 2).map(cat => (
-                      <span key={cat} className="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        {cat}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {new Date(item.isoDate).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  <a href={item.link} target="_blank" rel="noopener noreferrer">
-                    {item.title}
-                  </a>
-                </h4>
-
-                <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 mb-6 flex-1">
-                  {item.contentSnippet}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <a 
-                    href={item.link}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center"
-                  >
-                    View Details <ArrowRight size={14} className="ml-1" />
-                  </a>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => onSave(item)}
-                      className={`p-2 rounded-lg transition-colors ${savedPosts.includes(item.link) ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                    >
-                      <Layers size={16} />
-                    </button>
-                  </div>
-                </div>
+              {/* Decorative Icon */}
+              <div className="hidden md:flex items-center justify-center w-64 h-64 bg-indigo-500/10 rounded-full border border-indigo-500/20 relative">
+                <div className="absolute inset-0 rounded-full border border-indigo-500/20 animate-[spin_10s_linear_infinite]" />
+                <Layers size={80} className="text-indigo-400" />
               </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Standard Feed Section */}
-      <section>
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Recent Updates</span>
-          <div className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {standardItems.map((item, index) => (
-            <FeedCard
-              key={item.id || item.link}
-              item={item}
+      {/* Grid Items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatePresence mode="popLayout">
+          {gridItems.map((item, index) => (
+            <ArchitectureCard 
+              key={item.id || item.link} 
+              item={item} 
               index={index}
               onSummarize={onSummarize}
               isSummarizing={summarizingId === item.link}
               onSave={onSave}
               isSaved={savedPosts.includes(item.link)}
-              viewMode="grid"
-              subscribedCategories={[]}
-              onToggleSubscription={() => {}}
-              isPresentationMode={isPresentationMode}
             />
           ))}
+        </AnimatePresence>
+      </div>
+
+      {filteredItems.length === 0 && (
+        <div className="text-center py-20">
+          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Grid size={32} className="text-slate-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No architectures found</h3>
+          <p className="text-slate-500 mt-2">Try selecting a different category.</p>
         </div>
-      </section>
+      )}
     </div>
+  );
+};
+
+const ArchitectureCard = ({ item, index, onSummarize, isSummarizing, onSave, isSaved }: any) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.05 }}
+      className="group flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 overflow-hidden"
+    >
+      {/* Card Header */}
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-4">
+          <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 transition-colors">
+            <Box size={20} />
+          </div>
+          <button
+            onClick={() => onSave(item)}
+            className={`p-2 rounded-lg transition-colors ${
+              isSaved 
+                ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' 
+                : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Star size={18} className={isSaved ? "fill-current" : ""} />
+          </button>
+        </div>
+
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <a href={item.link} target="_blank" rel="noopener noreferrer">
+            {item.title}
+          </a>
+        </h3>
+
+        <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-3 mb-6 flex-1">
+          {item.contentSnippet}
+        </p>
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          {item.categories?.slice(0, 3).map((cat: string) => (
+            <span key={cat} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+              {cat}
+            </span>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
+          <div className="flex gap-2">
+            <button 
+              onClick={() => onSummarize(item)}
+              disabled={isSummarizing}
+              className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors disabled:opacity-50"
+              title="AI Summary"
+            >
+              <Zap size={18} className={isSummarizing ? "animate-spin" : ""} />
+            </button>
+          </div>
+          
+          <a 
+            href={item.link}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xs font-bold text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center transition-colors"
+          >
+            View Diagram <ExternalLink size={12} className="ml-1.5" />
+          </a>
+        </div>
+      </div>
+      
+      {/* Bottom accent line */}
+      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+    </motion.div>
   );
 };

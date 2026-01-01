@@ -1,6 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
-import { ColumnCustomizer } from './ColumnCustomizer';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
 interface TabNavigationProps {
@@ -12,13 +10,6 @@ interface TabNavigationProps {
   handleDateRangeChange: (range: { start: string; end: string } | null) => void;
   savedCount: number;
   isPresentationMode: boolean;
-  // Column Customizer Props
-  isColumnCustomizerOpen: boolean;
-  setIsColumnCustomizerOpen: (open: boolean) => void;
-  columnOrder: string[];
-  hiddenColumns: string[];
-  onUpdateOrder: (order: string[]) => void;
-  onToggleVisibility: (column: string) => void;
 }
 
 export const TabNavigation: React.FC<TabNavigationProps> = ({
@@ -29,13 +20,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({
   handleCategoryChange,
   handleDateRangeChange,
   savedCount,
-  isPresentationMode,
-  isColumnCustomizerOpen,
-  setIsColumnCustomizerOpen,
-  columnOrder,
-  hiddenColumns,
-  onUpdateOrder,
-  onToggleVisibility
+  isPresentationMode
 }) => {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -79,7 +64,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({
           return (
             <button
               key={tab.id}
-              ref={(el) => (tabsRef.current[index] = el)}
+              ref={(el) => { tabsRef.current[index] = el; }}
               role="tab"
               aria-selected={isActive}
               aria-controls={`panel-${tab.id}`}
@@ -106,27 +91,6 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({
           );
         })}
       </div>
-      
-      {activeTab === 'all' && (
-        <div className="absolute right-0">
-          <button
-            onClick={() => setIsColumnCustomizerOpen(!isColumnCustomizerOpen)}
-            className="flex items-center space-x-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors mr-4 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            aria-label="Customize Columns"
-          >
-            <SlidersHorizontal size={14} />
-            <span>Customize</span>
-          </button>
-          <ColumnCustomizer
-            isOpen={isColumnCustomizerOpen}
-            onClose={() => setIsColumnCustomizerOpen(false)}
-            columnOrder={columnOrder}
-            hiddenColumns={hiddenColumns}
-            onUpdateOrder={onUpdateOrder}
-            onToggleVisibility={onToggleVisibility}
-          />
-        </div>
-      )}
     </div>
   );
 };

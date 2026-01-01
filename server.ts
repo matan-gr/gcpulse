@@ -50,7 +50,7 @@ let cache: {
   data: any;
   timestamp: number;
 } | null = null;
-const CACHE_DURATION = 0; // Disable cache temporarily to force fresh IDs
+const CACHE_DURATION = 1000 * 60 * 5; // 5 minutes cache
 
 // API Routes
 app.get("/api/feed", async (req, res) => {
@@ -84,7 +84,7 @@ app.get("/api/feed", async (req, res) => {
 
     // Ensure unique IDs to prevent React key errors
     // We append the index to ALL IDs to guarantee uniqueness and stability within a single fetch
-    allItems.forEach((item, index) => {
+    allItems.forEach((item: any, index) => {
       const baseId = item.id || item.guid || item.link || `generated`;
       item.id = `${baseId}-${index}`;
     });
@@ -185,6 +185,33 @@ app.get("/api/ip-ranges", async (req, res) => {
   } catch (error) {
     console.error("Error fetching IP ranges:", error);
     res.status(500).json({ error: "Failed to fetch IP ranges" });
+  }
+});
+
+app.get("/api/gke-feed", async (req, res) => {
+  const { channel } = req.query;
+  const feedUrls: Record<string, string> = {
+    'stable': 'https://cloud.google.com/feeds/gke-stable-channel-release-notes.xml',
+    'regular': 'https://cloud.google.com/feeds/gke-regular-channel-release-notes.xml',
+    'rapid': 'https://cloud.google.com/feeds/gke-rapid-channel-release-notes.xml',
+  };
+
+  const url = feedUrls[String(channel).toLowerCase()];
+  if (!url) {
+    return res.status(400).json({ error: "Invalid channel" });
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch GKE feed: ${response.statusText}`);
+    }
+    const xml = await response.text();
+    res.set('Content-Type', 'text/xml');
+    res.send(xml);
+  } catch (error) {
+    console.error(`Error fetching GKE feed for ${channel}:`, error);
+    res.status(500).json({ error: "Failed to fetch GKE feed" });
   }
 });
 

@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { FeedItem } from '../types';
 import { extractEOLDate } from '../utils';
-import { Calendar, AlertTriangle, ArrowRight, CheckCircle2, AlertOctagon, Clock, CalendarDays, Filter } from 'lucide-react';
+import { Calendar, AlertTriangle, ArrowRight, CheckCircle2, AlertOctagon, Clock, CalendarDays, Filter, Hourglass, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ErrorBoundary } from './ErrorBoundary';
+import { toast } from 'sonner';
 
 interface DeprecationTimelineProps {
   items: FeedItem[];
@@ -48,24 +49,60 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
       imminent: processed.filter(i => i.daysUntil !== null && i.daysUntil < 90 && i.daysUntil >= 0),
       upcoming: processed.filter(i => i.daysUntil !== null && i.daysUntil >= 90 && i.daysUntil < 180),
       future: processed.filter(i => i.daysUntil !== null && i.daysUntil >= 180),
-      unknown: processed.filter(i => i.daysUntil === null || i.daysUntil < 0) // Past or unknown
+      unknown: processed.filter(i => i.daysUntil === null || i.daysUntil < 0)
     };
 
     return { sortedItems: processed, stats, groups };
   }, [items]);
 
+  const handleExportCalendar = () => {
+    if (sortedItems.length === 0) return;
+    
+    let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//GCP Pulse//Deprecations//EN\n";
+    
+    sortedItems.forEach(item => {
+      if (item.eolDate) {
+        const dateStr = item.eolDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:EOL: ${item.title}\n`;
+        icsContent += `DTSTART:${dateStr}\n`;
+        icsContent += `DTEND:${dateStr}\n`;
+        icsContent += `DESCRIPTION:${item.contentSnippet || item.title}\\n\\nMigration Guide: ${item.link}\n`;
+        icsContent += "END:VEVENT\n";
+      }
+    });
+    
+    icsContent += "END:VCALENDAR";
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'gcp-deprecations.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Calendar (.ics) downloaded");
+  };
+
   if (sortedItems.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
-        <p>No deprecation timeline data available.</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 size={40} className="text-emerald-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">No Active Deprecations</h3>
+        <p className="text-slate-500 dark:text-slate-400 max-w-md">
+          Great news! There are no known deprecations or end-of-life notices in the current feed.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
+    <div className="max-w-5xl mx-auto py-8 px-4">
       {/* Header & Stats */}
-      <div className="mb-10">
+      <div className="mb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
@@ -73,107 +110,63 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
               Deprecation Roadmap
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Strategic timeline of service retirements and critical changes.
+              Timeline of upcoming service retirements.
             </p>
           </div>
           
-          {/* Summary Cards */}
-          <div className="flex gap-4">
-            <div className="px-5 py-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl flex items-center">
-              <div className="p-2 bg-red-100 dark:bg-red-800/50 rounded-lg mr-3 text-red-600 dark:text-red-400">
-                <AlertOctagon size={20} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-red-600/70 dark:text-red-400/70 uppercase tracking-wider">Critical</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-400">{stats.critical}</p>
-              </div>
-            </div>
-            
-            <div className="px-5 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-xl flex items-center">
-              <div className="p-2 bg-amber-100 dark:bg-amber-800/50 rounded-lg mr-3 text-amber-600 dark:text-amber-400">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-amber-600/70 dark:text-amber-400/70 uppercase tracking-wider">Warning</p>
-                <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{stats.warning}</p>
-              </div>
-            </div>
+          <div className="flex gap-3">
+             <button 
+               onClick={handleExportCalendar}
+               className="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+             >
+               <Download size={16} className="mr-2" />
+               Export Calendar
+             </button>
           </div>
         </div>
 
-        {/* Timeline Groups */}
-        <div className="space-y-12">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+           <StatCard 
+             label="Critical (90d)" 
+             value={stats.critical} 
+             icon={AlertOctagon} 
+             color="red" 
+             active={stats.critical > 0}
+           />
+           <StatCard 
+             label="Warning (180d)" 
+             value={stats.warning} 
+             icon={AlertTriangle} 
+             color="amber" 
+             active={stats.warning > 0}
+           />
+           <StatCard 
+             label="Total Active" 
+             value={stats.total} 
+             icon={Calendar} 
+             color="blue" 
+             active={true}
+           />
+        </div>
+
+        {/* Timeline */}
+        <div className="relative space-y-12 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent dark:before:via-slate-700">
           
-          {/* Imminent Section */}
           {groups.imminent.length > 0 && (
-            <section>
-              <div className="flex items-center mb-6">
-                <div className="h-px flex-1 bg-red-200 dark:bg-red-900/50"></div>
-                <span className="px-4 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full text-sm font-bold uppercase tracking-wide border border-red-200 dark:border-red-800 mx-4">
-                  Imminent (Next 90 Days)
-                </span>
-                <div className="h-px flex-1 bg-red-200 dark:bg-red-900/50"></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {groups.imminent.map((item, idx) => (
-                  <DeprecationCard key={idx} item={item} status="critical" />
-                ))}
-              </div>
-            </section>
+            <TimelineSection title="Imminent Action Required" color="red" items={groups.imminent} />
           )}
-
-          {/* Upcoming Section */}
+          
           {groups.upcoming.length > 0 && (
-            <section>
-              <div className="flex items-center mb-6">
-                <div className="h-px flex-1 bg-amber-200 dark:bg-amber-900/50"></div>
-                <span className="px-4 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full text-sm font-bold uppercase tracking-wide border border-amber-200 dark:border-amber-800 mx-4">
-                  Upcoming (3-6 Months)
-                </span>
-                <div className="h-px flex-1 bg-amber-200 dark:bg-amber-900/50"></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groups.upcoming.map((item, idx) => (
-                  <DeprecationCard key={idx} item={item} status="warning" />
-                ))}
-              </div>
-            </section>
+            <TimelineSection title="Plan Migration" color="amber" items={groups.upcoming} />
           )}
-
-          {/* Future Section */}
+          
           {groups.future.length > 0 && (
-            <section>
-              <div className="flex items-center mb-6">
-                <div className="h-px flex-1 bg-blue-200 dark:bg-blue-900/50"></div>
-                <span className="px-4 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full text-sm font-bold uppercase tracking-wide border border-blue-200 dark:border-blue-800 mx-4">
-                  Future Roadmap (6+ Months)
-                </span>
-                <div className="h-px flex-1 bg-blue-200 dark:bg-blue-900/50"></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groups.future.map((item, idx) => (
-                  <DeprecationCard key={idx} item={item} status="info" />
-                ))}
-              </div>
-            </section>
+            <TimelineSection title="Future Roadmap" color="blue" items={groups.future} />
           )}
 
-           {/* Unknown/Past Section */}
-           {groups.unknown.length > 0 && (
-            <section>
-              <div className="flex items-center mb-6">
-                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
-                <span className="px-4 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-sm font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700 mx-4">
-                  Date TBD / Past
-                </span>
-                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"></div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {groups.unknown.map((item, idx) => (
-                  <DeprecationCard key={idx} item={item} status="neutral" />
-                ))}
-              </div>
-            </section>
+          {groups.unknown.length > 0 && (
+            <TimelineSection title="Past / TBD" color="slate" items={groups.unknown} />
           )}
 
         </div>
@@ -182,88 +175,105 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
   );
 };
 
-const DeprecationCard: React.FC<{ item: TimelineItem; status: 'critical' | 'warning' | 'info' | 'neutral' }> = ({ item, status }) => {
-  let styles = {
-    border: 'border-slate-200 dark:border-slate-800',
-    bg: 'bg-white dark:bg-slate-900',
-    iconColor: 'text-slate-400',
-    dateColor: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
-    hover: 'hover:border-blue-300 dark:hover:border-blue-700'
+const StatCard = ({ label, value, icon: Icon, color, active }: any) => {
+  const colors = {
+    red: 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30',
+    blue: 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30',
+  };
+  
+  return (
+    <div className={`p-4 rounded-xl border ${active ? colors[color as keyof typeof colors] : 'bg-slate-50 text-slate-400 border-slate-100 dark:bg-slate-900 dark:border-slate-800'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold uppercase tracking-wider opacity-70">{label}</span>
+        <Icon size={16} />
+      </div>
+      <span className="text-2xl font-bold">{value}</span>
+    </div>
+  );
+};
+
+const TimelineSection = ({ title, color, items }: { title: string, color: string, items: TimelineItem[] }) => {
+  const badgeColors = {
+    red: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-200 dark:border-red-800',
+    amber: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/50 dark:text-amber-200 dark:border-amber-800',
+    blue: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-800',
+    slate: 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700',
   };
 
-  if (status === 'critical') {
-    styles = {
-      border: 'border-red-200 dark:border-red-800',
-      bg: 'bg-red-50/50 dark:bg-red-900/10',
-      iconColor: 'text-red-500',
-      dateColor: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-      hover: 'hover:shadow-red-100 dark:hover:shadow-none'
-    };
-  } else if (status === 'warning') {
-    styles = {
-      border: 'border-amber-200 dark:border-amber-800',
-      bg: 'bg-amber-50/50 dark:bg-amber-900/10',
-      iconColor: 'text-amber-500',
-      dateColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-      hover: 'hover:shadow-amber-100 dark:hover:shadow-none'
-    };
-  } else if (status === 'info') {
-    styles = {
-      border: 'border-blue-200 dark:border-blue-800',
-      bg: 'bg-blue-50/30 dark:bg-blue-900/10',
-      iconColor: 'text-blue-500',
-      dateColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-      hover: 'hover:shadow-blue-100 dark:hover:shadow-none'
-    };
-  }
+  return (
+    <div className="relative">
+      <div className="sticky top-20 z-10 flex justify-center mb-8">
+        <span className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border shadow-sm ${badgeColors[color as keyof typeof badgeColors]}`}>
+          {title}
+        </span>
+      </div>
+      <div className="space-y-8">
+        {items.map((item, idx) => (
+          <TimelineCard key={idx} item={item} color={color} index={idx} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const TimelineCard = ({ item, color, index }: { item: TimelineItem, color: string, index: number }) => {
+  const isLeft = index % 2 === 0;
+  
+  const borderColors = {
+    red: 'border-l-4 border-l-red-500',
+    amber: 'border-l-4 border-l-amber-500',
+    blue: 'border-l-4 border-l-blue-500',
+    slate: 'border-l-4 border-l-slate-400',
+  };
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className={`rounded-xl border ${styles.border} ${styles.bg} p-5 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full group`}
+      viewport={{ once: true, margin: "-50px" }}
+      className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group`}
     >
-      <div className="flex justify-between items-start mb-4">
-        <span className={`px-3 py-1 rounded-lg text-xs font-bold font-mono flex items-center ${styles.dateColor}`}>
-          <Clock size={12} className="mr-1.5" />
-          {item.eolDate 
-            ? item.eolDate.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) 
-            : 'Date TBD'}
-        </span>
-        {item.daysUntil !== null && item.daysUntil > 0 && (
-          <span className={`text-[10px] font-bold uppercase tracking-wide ${styles.iconColor}`}>
-            {item.daysUntil} Days Left
-          </span>
-        )}
+      {/* Timeline Dot */}
+      <div className="absolute left-0 md:left-1/2 w-10 h-10 -ml-5 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border-4 border-slate-100 dark:border-slate-800 shadow-sm z-10 group-hover:scale-110 transition-transform">
+        <Clock size={16} className={`text-${color}-500`} />
       </div>
 
-      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-        <a href={item.link} target="_blank" rel="noopener noreferrer">
-          {item.title}
-        </a>
-      </h3>
-
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-3 flex-1">
-        {item.contentSnippet}
-      </p>
-
-      <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between mt-auto">
-        <div className="flex gap-1">
-           {item.categories?.slice(0, 2).map(cat => (
-             <span key={cat} className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-500">
-               {cat}
-             </span>
-           ))}
+      {/* Card */}
+      <div className={`w-full md:w-[calc(50%-2.5rem)] ml-12 md:ml-0 p-6 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300 ${borderColors[color as keyof typeof borderColors]}`}>
+        <div className="flex justify-between items-start mb-3">
+          <span className={`text-xs font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400`}>
+            {item.eolDate ? item.eolDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBD'}
+          </span>
+          {item.daysUntil !== null && item.daysUntil > 0 && (
+            <span className={`text-xs font-bold ${item.daysUntil < 90 ? 'text-red-600 animate-pulse' : 'text-slate-500'}`}>
+              {item.daysUntil} Days Left
+            </span>
+          )}
         </div>
-        <a 
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`text-xs font-bold flex items-center ${styles.iconColor} hover:underline`}
-        >
-          Migration Guide <ArrowRight size={12} className="ml-1" />
-        </a>
+        
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+          <a href={item.link} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">
+            {item.title}
+          </a>
+        </h3>
+        
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-3">
+          {item.contentSnippet}
+        </p>
+
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+           <div className="flex gap-2">
+             {item.categories?.slice(0, 2).map(cat => (
+               <span key={cat} className="text-[10px] uppercase font-bold text-slate-400">
+                 {cat}
+               </span>
+             ))}
+           </div>
+           <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-blue-600 hover:underline flex items-center">
+             Migration Guide <ArrowRight size={12} className="ml-1" />
+           </a>
+        </div>
       </div>
     </motion.div>
   );

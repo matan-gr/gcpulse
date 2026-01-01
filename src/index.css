@@ -3,6 +3,8 @@
 
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -26,10 +28,17 @@ body {
   background-attachment: fixed;
 }
 
+/* Dark mode background enhancement */
+:is(.dark body) {
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(30, 58, 138, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 1) 0%, transparent 100%);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -37,7 +46,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors border-2 border-transparent bg-clip-content;
 }
 
 /* Glassmorphism Utilities */
@@ -47,6 +56,16 @@ body {
 
 .glass-card {
   @apply bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-md transition-all duration-300;
+}
+
+.mask-linear-fade {
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+}
+
+/* Text Gradients */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400;
 }
 
 /* Component Classes */
@@ -70,7 +89,7 @@ body {
   }
 
   .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md border border-transparent dark:bg-blue-600 dark:hover:bg-blue-500;
+    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md border border-transparent dark:bg-blue-600 dark:hover:bg-blue-500 hover:shadow-blue-500/20 dark:hover:shadow-blue-500/20;
   }
 
   .btn-secondary {
@@ -78,11 +97,11 @@ body {
   }
 
   .btn-ghost {
-    @apply text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white;
+    @apply text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white;
   }
 
   .btn-icon {
-    @apply p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors;
+    @apply p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors;
   }
 
   /* Cards */
@@ -91,37 +110,37 @@ body {
   }
 
   .card-hover {
-    @apply hover:shadow-xl hover:-translate-y-0.5 hover:border-blue-300/50 dark:hover:border-blue-700/50 transition-all duration-300;
+    @apply hover:shadow-xl hover:-translate-y-0.5 hover:border-blue-300/50 dark:hover:border-blue-700/50 transition-all duration-300 hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10;
   }
 
   /* Badges */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm;
   }
 
   .badge-blue {
-    @apply bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800;
+    @apply bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800;
   }
 
   .badge-green {
-    @apply bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800;
+    @apply bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800;
   }
 
   .badge-orange {
-    @apply bg-orange-50 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800;
+    @apply bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800;
   }
 
   .badge-red {
-    @apply bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800;
+    @apply bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800;
   }
   
   .badge-gray {
-    @apply bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700;
+    @apply bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700;
   }
 
   /* Inputs */
   .input-field {
-    @apply w-full bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 border focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-sm transition-all shadow-sm outline-none placeholder:text-slate-400;
+    @apply w-full bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 border focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-sm transition-all shadow-sm outline-none placeholder:text-slate-400 text-slate-900 dark:text-white;
   }
 
   /* Sidebar */
@@ -130,7 +149,7 @@ body {
   }
 
   .sidebar-link-active {
-    @apply bg-blue-50/50 dark:bg-blue-900/10 text-blue-700 dark:text-blue-400 font-bold shadow-sm border-blue-100 dark:border-blue-800/50;
+    @apply bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-bold shadow-sm border-blue-100 dark:border-blue-800/50;
   }
 }
 
@@ -154,7 +173,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .prose blockquote {
-  @apply border-l-4 border-blue-500/30 dark:border-blue-400/30 pl-4 italic text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/30 py-2 pr-2 rounded-r-lg;
+  @apply border-l-4 border-blue-500/30 dark:border-blue-400/30 pl-4 italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/30 py-2 pr-2 rounded-r-lg;
 }
 
 /* Print Styles for Executive Briefing */

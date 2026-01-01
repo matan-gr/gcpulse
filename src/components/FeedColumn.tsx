@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeedItem } from '../types';
 import { FeedCard } from './FeedCard';
 import { SkeletonCard } from './SkeletonCard';
 import { DeprecationLoader } from './DeprecationLoader';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AnalysisResult } from '../types';
+import { useInView } from 'react-intersection-observer';
 
 interface FeedColumnProps {
   source: string;
@@ -20,6 +21,8 @@ interface FeedColumnProps {
   onSelectCategory: (category: string | null) => void;
   analyses: Record<string, AnalysisResult>;
   isPresentationMode: boolean;
+  density?: 'comfortable' | 'compact';
+  showImages?: boolean;
 }
 
 export const FeedColumn: React.FC<FeedColumnProps> = ({
@@ -34,15 +37,28 @@ export const FeedColumn: React.FC<FeedColumnProps> = ({
   onToggleSubscription,
   onSelectCategory,
   analyses,
-  isPresentationMode
+  isPresentationMode,
+  density = 'comfortable',
+  showImages = true
 }) => {
   const [visibleCount, setVisibleCount] = useState(5);
   const visibleItems = items.slice(0, visibleCount);
   const hasMore = visibleCount < items.length;
 
-  const handleShowMore = () => {
-    setVisibleCount(prev => prev + 5);
-  };
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: '200px', // Load more before reaching the bottom
+  });
+
+  useEffect(() => {
+    if (inView && hasMore) {
+      // Small delay to simulate loading or just debounce slightly
+      const timer = setTimeout(() => {
+        setVisibleCount(prev => prev + 5);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [inView, hasMore]);
 
   // Define styles based on source
   let headerColor = '';
@@ -118,20 +134,19 @@ export const FeedColumn: React.FC<FeedColumnProps> = ({
                   onSelectCategory={onSelectCategory}
                   analysis={analyses[item.link]}
                   isPresentationMode={isPresentationMode}
+                  density={density}
+                  showImages={showImages}
                 />
               ))}
             </AnimatePresence>
             
             {hasMore && (
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                onClick={handleShowMore}
-                className="w-full py-3 flex items-center justify-center space-x-2 text-sm font-medium text-gray-500 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all border border-dashed border-gray-200 dark:border-gray-700"
-              >
-                <span>Show More</span>
-                <ChevronDown size={16} />
-              </motion.button>
+              <div ref={ref} className="flex justify-center py-4">
+                 <div className="flex items-center space-x-2 text-slate-400 text-sm">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Loading more...</span>
+                 </div>
+              </div>
             )}
           </>
         ) : (

@@ -9,7 +9,8 @@ interface Message {
   timestamp: Date;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const apiKey = window.ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 export const useGeminiAssistant = (items: FeedItem[]) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -111,6 +112,54 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     ${contextData}
   `;
 
+  const handleError = (error: any) => {
+    let errorMessage = "I encountered an error processing your request.";
+      
+    const errorStr = JSON.stringify(error);
+    const isQuotaError = 
+      error.message?.includes('429') || 
+      error.status === 429 || 
+      error.message?.includes('quota') ||
+      error.error?.code === 429 ||
+      error.error?.status === 'RESOURCE_EXHAUSTED' ||
+      errorStr.includes('RESOURCE_EXHAUSTED') ||
+      errorStr.includes('"code":429');
+
+    if (isQuotaError) {
+      errorMessage = "⚠️ **Quota Exceeded**: You have reached the rate limit for the Gemini API. Please check your billing plan or wait a few minutes before trying again.";
+    }
+    
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 1).toString(),
+      role: 'model',
+      content: errorMessage,
+      timestamp: new Date()
+    }]);
+  };
+
+  const generateWithRetry = async (call: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
+    try {
+      return await call();
+    } catch (error: any) {
+      const errorStr = JSON.stringify(error);
+      const isQuotaError = 
+        error.message?.includes('429') || 
+        error.status === 429 || 
+        error.message?.includes('quota') ||
+        error.error?.code === 429 ||
+        error.error?.status === 'RESOURCE_EXHAUSTED' ||
+        errorStr.includes('RESOURCE_EXHAUSTED') ||
+        errorStr.includes('"code":429');
+
+      if (isQuotaError && retries > 0) {
+        console.warn(`Quota exceeded, retrying in ${delay}ms... (${retries} retries left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return generateWithRetry(call, retries - 1, delay * 2);
+      }
+      throw error;
+    }
+  };
+
   const generateBriefing = async () => {
     setLoading(true);
     // Filter for last 7 days only for this specific briefing
@@ -162,10 +211,10 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
         *   **[Feature]**: [Value Proposition]
       `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateWithRetry(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
-      });
+      }));
 
       const briefingText = response.text || "Unable to generate briefing.";
       
@@ -217,10 +266,10 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
         Answer the user's question acting as a Senior TAM. Refer to the Data Context and Conversation History.
       `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateWithRetry(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
-      });
+      }));
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -236,31 +285,6 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleError = (error: any) => {
-    let errorMessage = "I encountered an error processing your request.";
-      
-    const errorStr = JSON.stringify(error);
-    const isQuotaError = 
-      error.message?.includes('429') || 
-      error.status === 429 || 
-      error.message?.includes('quota') ||
-      error.error?.code === 429 ||
-      error.error?.status === 'RESOURCE_EXHAUSTED' ||
-      errorStr.includes('RESOURCE_EXHAUSTED') ||
-      errorStr.includes('"code":429');
-
-    if (isQuotaError) {
-      errorMessage = "⚠️ **Quota Exceeded**: Please wait a moment before sending another message.";
-    }
-    
-    setMessages(prev => [...prev, {
-      id: (Date.now() + 1).toString(),
-      role: 'model',
-      content: errorMessage,
-      timestamp: new Date()
-    }]);
   };
 
   // Auto-generate on first load if we have items

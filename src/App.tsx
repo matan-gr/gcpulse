@@ -41,7 +41,6 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<'all' | 'saved' | 'incidents' | 'deprecations' | 'security' | 'architecture' | 'tools' | 'dashboard' | 'assistant'>('all');
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isColumnCustomizerOpen, setIsColumnCustomizerOpen] = useState(false);
 
   // Data Fetching with React Query
   const { data: feed, isLoading: feedLoading, error: queryError, refetch: refetchFeed, isRefetching: feedRefetching } = useFeed();
@@ -280,19 +279,6 @@ function AppContent() {
         handleDateRangeChange={handleDateRangeChange}
         savedCount={prefs.savedPosts.length}
         isPresentationMode={isPresentationMode}
-        isColumnCustomizerOpen={isColumnCustomizerOpen}
-        setIsColumnCustomizerOpen={setIsColumnCustomizerOpen}
-        columnOrder={prefs.columnOrder}
-        hiddenColumns={prefs.hiddenColumns}
-        onUpdateOrder={(order) => updatePrefs({ columnOrder: order })}
-        onToggleVisibility={(column) => {
-          const isHidden = prefs.hiddenColumns.includes(column);
-          updatePrefs({
-            hiddenColumns: isHidden 
-              ? prefs.hiddenColumns.filter(c => c !== column)
-              : [...prefs.hiddenColumns, column]
-          });
-        }}
       />
 
       <Suspense fallback={<PageLoader />}>
@@ -367,6 +353,15 @@ function AppContent() {
                 analyses={analyses}
                 isPresentationMode={isPresentationMode}
                 isAiLoading={isAiLoading}
+                onToggleColumnVisibility={(column) => {
+                  const isHidden = prefs.hiddenColumns.includes(column);
+                  updatePrefs({
+                    hiddenColumns: isHidden 
+                      ? prefs.hiddenColumns.filter(c => c !== column)
+                      : [...prefs.hiddenColumns, column]
+                  });
+                }}
+                onUpdateColumnOrder={(order) => updatePrefs({ columnOrder: order })}
               />
             ) : (
               <StandardFeedView

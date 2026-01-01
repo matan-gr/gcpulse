@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from '../Sidebar';
-import { Menu, Maximize2, Minimize2, Sun, Moon, Bell } from 'lucide-react';
+import { Menu, Maximize2, Minimize2, Sun, Moon, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { GlobalSearch } from '../GlobalSearch';
 import { useTheme } from '../../hooks/useTheme';
 import { Tooltip } from '../ui/Tooltip';
+import { ScrollToTopButton } from '../ui/ScrollToTopButton';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -52,6 +53,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   onExportCSV
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 flex">
@@ -63,21 +65,33 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         isPresentationMode={isPresentationMode}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
+        isDesktopOpen={isDesktopSidebarOpen}
       />
 
       {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ${!isPresentationMode ? 'lg:ml-64' : ''}`}>
+      <div className={`flex-1 transition-all duration-300 ${!isPresentationMode && isDesktopSidebarOpen ? 'lg:ml-72' : ''}`}>
         
         {/* Top Header / Controls */}
-        <div className="sticky top-0 z-30 glass border-b border-slate-200 dark:border-slate-800 px-6 py-3 grid grid-cols-12 gap-4 items-center">
-          <div className="col-span-12 md:col-span-3 flex items-center">
+        <div className="sticky top-0 z-30 glass border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 grid grid-cols-12 gap-3 sm:gap-4 items-center">
+          <div className="col-span-8 md:col-span-3 flex items-center">
             {/* Mobile Menu Trigger */}
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden mr-4 p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              className="lg:hidden mr-3 p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
             >
               <Menu size={24} />
             </button>
+
+            {/* Desktop Sidebar Toggle */}
+            {!isPresentationMode && (
+              <button
+                onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
+                className="hidden lg:flex mr-4 p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                title={isDesktopSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+              >
+                {isDesktopSidebarOpen ? <PanelLeftClose size={24} /> : <PanelLeftOpen size={24} />}
+              </button>
+            )}
 
             {isPresentationMode && (
               <div className="flex items-center space-x-2 mr-4">
@@ -87,7 +101,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">GCP Pulse</span>
               </div>
             )}
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white capitalize truncate">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white capitalize truncate">
               {isPresentationMode ? 'Executive Briefing' : activeTab === 'all' ? 'Discover Feed' : activeTab === 'saved' ? 'Read Later' : activeTab === 'dashboard' ? 'Dashboard' : activeTab}
             </h1>
           </div>
@@ -113,7 +127,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
              )}
           </div>
 
-          <div className="col-span-12 md:col-span-4 flex justify-end items-center space-x-2">
+          <div className="col-span-4 md:col-span-4 flex justify-end items-center space-x-2">
              {/* Theme Toggle */}
              <Tooltip content={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`} position="bottom">
                <button
@@ -123,31 +137,14 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
              </Tooltip>
-
-             {/* Notifications */}
-             <Tooltip content="Notifications" position="bottom">
-               <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
-                 <Bell size={20} />
-                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-               </button>
-             </Tooltip>
-
-             {/* User Profile */}
-             <div className="flex items-center space-x-3 pl-2 ml-2 border-l border-slate-200 dark:border-slate-700">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">TAM User</p>
-                  <p className="text-[10px] text-slate-500 font-medium leading-none mt-1">Google Cloud</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-md cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
-                  TM
-                </div>
-             </div>
           </div>
         </div>
 
         <div className="p-4 sm:p-6 pb-20">
           {children}
         </div>
+        
+        <ScrollToTopButton />
       </div>
     </div>
   );

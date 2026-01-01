@@ -1,161 +1,8 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Server, AlertTriangle, CheckCircle, Clock, AlertOctagon, Calendar, ArrowRight, ExternalLink, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
+import { Server, AlertTriangle, CheckCircle, Clock, ExternalLink, ShieldAlert, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ErrorBoundary } from './ErrorBoundary';
-
-interface GKEVersion {
-  version: string;
-  date: string;
-  status: 'Healthy' | 'Security Patch' | 'Deprecated';
-  link: string;
-  description: string;
-}
-
-interface GKEChannelInfo {
-  name: 'Stable' | 'Regular' | 'Rapid';
-  current: GKEVersion;
-  history: GKEVersion[];
-}
-
-const FEED_URLS = {
-  Stable: 'https://cloud.google.com/feeds/gke-stable-channel-release-notes.xml',
-  Regular: 'https://cloud.google.com/feeds/gke-regular-channel-release-notes.xml',
-  Rapid: 'https://cloud.google.com/feeds/gke-rapid-channel-release-notes.xml',
-};
-
-const fetchGKEVersions = async (): Promise<GKEChannelInfo[]> => {
-  const fetchChannel = async (name: 'Stable' | 'Regular' | 'Rapid', url: string): Promise<GKEChannelInfo> => {
-    try {
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error(`Failed to fetch ${name} feed`);
-      
-      const xmlText = await response.text();
-      const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
-      
-      // Support both Atom (entry) and RSS (item)
-      let entries = Array.from(xmlDoc.querySelectorAll("entry"));
-      if (entries.length === 0) {
-        entries = Array.from(xmlDoc.querySelectorAll("item"));
-      }
-
-      if (entries.length === 0) throw new Error(`No entries found for ${name}`);
-
-      const parseEntry = (entry: Element): GKEVersion => {
-        const title = entry.querySelector("title")?.textContent || "";
-        const content = entry.querySelector("content")?.textContent || entry.querySelector("description")?.textContent || "";
-        const updated = entry.querySelector("updated")?.textContent || entry.querySelector("pubDate")?.textContent || new Date().toISOString();
-        
-        // Handle link extraction for both Atom (attribute) and RSS (text content)
-        let link = "";
-        const linkElem = entry.querySelector("link");
-        if (linkElem) {
-           link = linkElem.getAttribute("href") || linkElem.textContent || url;
-        } else {
-           link = url;
-        }
-
-        // Robust version extraction
-        // Look for patterns like: 1.27.3-gke.100, 1.27.3, v1.27.3
-        // Prioritize strict GKE pattern, then standard semver
-        let version = "Unknown";
-        
-        const gkeRegex = /(\d+\.\d+\.\d+-gke\.\d+)/;
-        const semverRegex = /v?(\d+\.\d+\.\d+)/;
-        
-        // 1. Try Title with GKE regex
-        let match = title.match(gkeRegex);
-        if (match) {
-            version = match[1];
-        } else {
-            // 2. Try Title with Semver regex
-            match = title.match(semverRegex);
-            if (match) {
-                version = match[1];
-            } else {
-                // 3. Try Content with GKE regex (often the version is in the description)
-                match = content.match(gkeRegex);
-                if (match) {
-                    version = match[1];
-                }
-            }
-        }
-
-        // Determine status
-        let status: 'Healthy' | 'Security Patch' | 'Deprecated' = 'Healthy';
-        const lowerContent = (title + " " + content).toLowerCase();
-        
-        if (lowerContent.includes('security patch') || lowerContent.includes('vulnerability') || lowerContent.includes('cve')) {
-          status = 'Security Patch';
-        } else if (lowerContent.includes('deprecation') || lowerContent.includes('deprecated') || lowerContent.includes('removal')) {
-          status = 'Deprecated';
-        }
-
-        return {
-          version,
-          date: new Date(updated).toLocaleDateString(),
-          status,
-          link,
-          description: content.replace(/<[^>]*>?/gm, '').slice(0, 150) + "..."
-        };
-      };
-
-      const versions = entries.map(parseEntry).filter(v => v.version !== "Unknown");
-      
-      // Fallback if no valid versions found
-      if (versions.length === 0) {
-         // If we found entries but couldn't parse versions, return the first entry with "Unknown" version
-         // rather than throwing, so the user sees *something*
-         const firstRaw = entries[0];
-         const fallbackVersion: GKEVersion = {
-             version: "Latest", // Fallback label
-             date: new Date().toLocaleDateString(),
-             status: 'Healthy',
-             link: url,
-             description: "Could not parse exact version number. Click to view release notes."
-         };
-         return {
-             name,
-             current: fallbackVersion,
-             history: []
-         };
-      }
-
-      const current = versions[0];
-      const history = versions.slice(1, 5); // Get next 4 versions
-
-      return {
-        name,
-        current,
-        history
-      };
-    } catch (error) {
-      console.error(`Error fetching ${name} channel:`, error);
-      const errorVersion: GKEVersion = {
-        version: 'Error',
-        date: '-',
-        status: 'Deprecated',
-        link: url,
-        description: 'Failed to load channel data.'
-      };
-      return {
-        name,
-        current: errorVersion,
-        history: []
-      };
-    }
-  };
-
-  const channels = await Promise.all([
-    fetchChannel('Stable', FEED_URLS.Stable),
-    fetchChannel('Regular', FEED_URLS.Regular),
-    fetchChannel('Rapid', FEED_URLS.Rapid),
-  ]);
-
-  return channels;
-};
+import { useGKEVersions, GKEChannelInfo } from '../hooks/useGKEVersions';
 
 export const GKEVersionTracker: React.FC = () => {
   return (
@@ -176,15 +23,6 @@ const ChannelCard: React.FC<{ channel: GKEChannelInfo; index: number }> = ({ cha
     }
   };
 
-  const getChannelDescription = (name: string) => {
-    switch (name) {
-      case 'Stable': return 'Best for production workloads requiring maximum stability.';
-      case 'Regular': return 'Standard channel for most production clusters.';
-      case 'Rapid': return 'Early access to new features. Not for production.';
-      default: return '';
-    }
-  };
-
   const statusStyles = getStatusColor(channel.current.status);
 
   return (
@@ -192,49 +30,63 @@ const ChannelCard: React.FC<{ channel: GKEChannelInfo; index: number }> = ({ cha
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex flex-col h-full rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+      className="flex flex-col h-full rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all duration-300 bg-white dark:bg-slate-900 group"
     >
-      <div className={`p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center ${
-        channel.name === 'Stable' ? 'bg-emerald-50/50 dark:bg-emerald-900/10' :
-        channel.name === 'Rapid' ? 'bg-purple-50/50 dark:bg-purple-900/10' : 'bg-blue-50/50 dark:bg-blue-900/10'
-      }`}>
-        <h3 className="font-bold text-lg text-gray-900 dark:text-white">{channel.name} Channel</h3>
+      <div className={`p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center relative overflow-hidden`}>
+        <div className={`absolute inset-0 opacity-10 ${
+          channel.name === 'Stable' ? 'bg-emerald-500' :
+          channel.name === 'Rapid' ? 'bg-purple-500' : 'bg-blue-500'
+        }`} />
+        <div className="relative z-10 flex items-center space-x-3">
+           <div className={`p-2 rounded-lg ${
+             channel.name === 'Stable' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' :
+             channel.name === 'Rapid' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400' : 
+             'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400'
+           }`}>
+             <Activity size={20} />
+           </div>
+           <h3 className="font-bold text-lg text-slate-900 dark:text-white">{channel.name}</h3>
+        </div>
         {channel.current.status === 'Security Patch' && (
-          <ShieldAlert size={18} className="text-red-500" />
+          <div className="relative z-10 animate-pulse">
+             <ShieldAlert size={20} className="text-red-500" />
+          </div>
         )}
       </div>
 
       <div className="p-6 flex-1 flex flex-col">
-        <div className="mb-4">
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Current Version</span>
-          <div className="text-2xl font-mono font-bold text-gray-900 dark:text-white mt-1">
-            {channel.current.version}
+        <div className="mb-6">
+          <div className="flex justify-between items-end mb-2">
+             <span className="text-xs text-slate-500 uppercase tracking-wider font-bold">Current Version</span>
+             <span className="text-[10px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full flex items-center">
+                <Clock size={10} className="mr-1" /> {channel.current.date}
+             </span>
           </div>
-          <div className="text-xs text-gray-400 mt-1 flex items-center">
-            <Clock size={12} className="mr-1" /> Released: {channel.current.date}
+          <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white tracking-tight">
+            {channel.current.version}
           </div>
         </div>
 
-        <div className={`mb-4 px-3 py-2 rounded-lg text-xs font-bold border flex items-center justify-center ${statusStyles}`}>
+        <div className={`mb-6 px-3 py-2 rounded-lg text-xs font-bold border flex items-center justify-center ${statusStyles}`}>
             {channel.current.status === 'Healthy' && <CheckCircle size={14} className="mr-1.5" />}
             {channel.current.status === 'Security Patch' && <ShieldAlert size={14} className="mr-1.5" />}
             {channel.current.status === 'Deprecated' && <AlertTriangle size={14} className="mr-1.5" />}
             {channel.current.status.toUpperCase()}
         </div>
 
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 flex-1">
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-6 line-clamp-3 leading-relaxed">
           {channel.current.description}
         </p>
 
         {/* Collapsible History Section */}
         {channel.history.length > 0 && (
-          <div className="mb-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="mb-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <button 
               onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-              className="w-full flex justify-between items-center text-xs text-gray-500 uppercase tracking-wider font-semibold mb-2 hover:text-blue-600 transition-colors"
+              className="w-full flex justify-between items-center text-xs text-slate-500 uppercase tracking-wider font-bold mb-2 hover:text-blue-600 transition-colors group/history"
             >
               <span>Recent History</span>
-              {isHistoryOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {isHistoryOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} className="group-hover/history:translate-y-0.5 transition-transform" />}
             </button>
             
             <AnimatePresence>
@@ -247,9 +99,9 @@ const ChannelCard: React.FC<{ channel: GKEChannelInfo; index: number }> = ({ cha
                 >
                   <div className="space-y-2 pb-2">
                     {channel.history.map((hist, hIdx) => (
-                      <div key={hIdx} className="flex justify-between items-center text-xs p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <span className="font-mono text-gray-700 dark:text-gray-300">{hist.version}</span>
-                        <span className="text-gray-400">{hist.date}</span>
+                      <div key={hIdx} className="flex justify-between items-center text-xs p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <span className="font-mono font-medium text-slate-700 dark:text-slate-300">{hist.version}</span>
+                        <span className="text-slate-400">{hist.date}</span>
                       </div>
                     ))}
                   </div>
@@ -259,17 +111,14 @@ const ChannelCard: React.FC<{ channel: GKEChannelInfo; index: number }> = ({ cha
           </div>
         )}
 
-        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
-          <p className="text-xs text-gray-400 italic mb-3">
-            {getChannelDescription(channel.name)}
-          </p>
+        <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
           <a 
             href={channel.current.link}
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-sm font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
+            className="text-sm font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center justify-center w-full py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           >
-            Read Release Notes <ExternalLink size={14} className="ml-1" />
+            Read Release Notes <ExternalLink size={14} className="ml-1.5" />
           </a>
         </div>
       </div>
@@ -278,26 +127,22 @@ const ChannelCard: React.FC<{ channel: GKEChannelInfo; index: number }> = ({ cha
 };
 
 const GKEVersionTrackerContent: React.FC = () => {
-  const { data: channels, isLoading, error } = useQuery({
-    queryKey: ['gke-channels'],
-    queryFn: fetchGKEVersions,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
+  const { data: channels, isLoading, error } = useGKEVersions();
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mb-4"></div>
-        <p className="text-gray-500 font-medium">Syncing with Google Cloud Release Feeds...</p>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-slate-500 font-medium">Syncing with Google Cloud Release Feeds...</p>
       </div>
     );
   }
 
   if (error || !channels) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center min-h-[400px] text-gray-400 dark:text-gray-500">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center min-h-[400px] text-slate-400">
         <AlertTriangle size={48} className="mb-4 text-red-500 opacity-50" />
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Failed to load GKE data</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Failed to load GKE data</h3>
         <p className="text-sm">Could not retrieve the latest GKE channel information.</p>
       </div>
     );
@@ -305,21 +150,28 @@ const GKEVersionTrackerContent: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 p-8 text-white">
-          <div className="flex items-center space-x-3 mb-4">
-            <Server className="text-blue-200" size={32} />
-            <h2 className="text-2xl font-bold">GKE Release Channels</h2>
+        <div className="bg-gradient-to-r from-blue-700 to-indigo-700 p-8 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+             <Server size={120} />
           </div>
-          <p className="text-blue-100 max-w-2xl">
-            Official release status tracked directly from Google Cloud feeds. 
-            Monitor the latest versions across Stable, Regular, and Rapid channels.
-          </p>
+          <div className="relative z-10">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
+                <Server className="text-blue-100" size={32} />
+              </div>
+              <h2 className="text-2xl font-bold">GKE Release Channels</h2>
+            </div>
+            <p className="text-blue-100 max-w-2xl text-lg leading-relaxed">
+              Official release status tracked directly from Google Cloud feeds. 
+              Monitor the latest versions across Stable, Regular, and Rapid channels.
+            </p>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-8">
+        <div className="p-8 bg-slate-50 dark:bg-slate-950/50">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {channels.map((channel, index) => (
               <ChannelCard key={channel.name} channel={channel} index={index} />
@@ -327,8 +179,8 @@ const GKEVersionTrackerContent: React.FC = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Source: <a href="https://cloud.google.com/kubernetes-engine/docs/release-notes" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud GKE Release Notes</a>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Source: <a href="https://cloud.google.com/kubernetes-engine/docs/release-notes" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">Google Cloud GKE Release Notes</a>
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 export interface FeedItem {
+  id?: string;
   title: string;
   link: string;
   pubDate: string;
@@ -17,6 +18,7 @@ export interface FeedItem {
   isActive?: boolean;
   description?: string;
   updates?: Array<{ created: string; text: string }>;
+  products?: string[];
 }
 
 export interface Feed {
