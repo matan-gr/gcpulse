@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import Parser from "rss-parser";
 import fs from 'fs';
 import path from 'path';
@@ -228,16 +227,21 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 
 // Vite middleware for development
 if (!isProduction) {
-  const vite = await createViteServer({
-    server: { 
-      middlewareMode: true,
-      hmr: {
-        server
-      }
-    },
-    appType: "spa",
-  });
-  app.use(vite.middlewares);
+  try {
+    const vite = await import("vite");
+    const viteServer = await vite.createServer({
+      server: { 
+        middlewareMode: true,
+        hmr: {
+          server
+        }
+      },
+      appType: "spa",
+    });
+    app.use(viteServer.middlewares);
+  } catch (e) {
+    console.error("Failed to start Vite middleware:", e);
+  }
 } else {
   // Serve static files in production, but do not serve index.html automatically
   // This ensures that requests for / or /index.html fall through to the handler below
