@@ -2,46 +2,23 @@
 
 This guide provides step-by-step instructions for deploying the GCP Pulse application to **Google Cloud Run**.
 
-## 📂 File Structure
+## 🏗️ Architecture
 
-```
-.
-├── Dockerfile.txt       # Docker build instructions (rename to Dockerfile)
-├── dockerignore.txt     # Files to ignore during Docker build (rename to .dockerignore)
-├── deploy.md            # This guide
-├── index.html           # Entry HTML
-├── metadata.json        # App metadata
-├── nginx.txt            # Nginx configuration (copied to /etc/nginx/nginx.conf)
-├── package.json         # Dependencies and scripts
-├── server.ts            # Express server entry point
-├── tsconfig.json        # TypeScript config
-├── vite.config.ts       # Vite config
-└── src                  # Source code
-    ├── App.tsx
-    ├── index.css
-    ├── main.tsx
-    ├── types.ts
-    ├── utils.ts
-    ├── components/      # UI Components
-    ├── hooks/           # Custom React Hooks
-    ├── lib/             # Utilities (QueryClient)
-    └── views/           # Page Views
-```
+The application is a **single-container Node.js application**:
+*   **Backend**: An Express.js server (`server.ts`) that:
+    1.  Serves the React frontend (static files from `dist/`).
+    2.  Proxies API requests to Google Cloud feeds (to avoid CORS issues).
+    3.  **Injects the Gemini API Key** into the frontend at runtime.
+*   **Frontend**: A React application built with Vite.
 
----
+## 🔑 API Key Configuration (CRITICAL)
 
-## 🐳 Dockerization Strategy
+The application **requires** a valid Google Gemini API Key to function. This key is used for:
+1.  Generating executive summaries.
+2.  Powering the AI Assistant chat.
+3.  Smart filtering of feed items.
 
-The application uses a **hybrid architecture** inside a single container:
-
-1.  **Nginx (Port 80)**: Acts as the reverse proxy and entry point. It handles incoming traffic, SSL termination (via Cloud Run), and forwards requests to the Node.js backend.
-2.  **Node.js Server (Port 3000)**: Runs the Express/Vite application to serve the frontend and API.
-
-The `Dockerfile` uses a **multi-stage build**:
-*   **Builder Stage**: Compiles the React frontend using Vite.
-*   **Runner Stage**: A lightweight Alpine image running both Nginx and Node.js via a startup script.
-
----
+**You must provide this key as an environment variable (`GEMINI_API_KEY`) when deploying.**
 
 ## 🚀 Deploying to Google Cloud Run
 
@@ -53,29 +30,22 @@ The `Dockerfile` uses a **multi-stage build**:
     *   Run `gcloud auth login`
     *   Run `gcloud config set project YOUR_PROJECT_ID`
 
-### Step 1: Prepare Docker Files
+### Step 1: Build and Push the Container
 
-Rename `Dockerfile.txt` to `Dockerfile` and `dockerignore.txt` to `.dockerignore`:
-
-```bash
-mv Dockerfile.txt Dockerfile
-mv dockerignore.txt .dockerignore
-```
-
-### Step 2: Build and Push the Image
-
-Use **Cloud Build** to build and store the image in Google Container Registry (GCR) or Artifact Registry.
+Use **Cloud Build** to build the Docker image and store it in Google Container Registry (GCR) or Artifact Registry.
 
 ```bash
 # Replace YOUR_PROJECT_ID with your actual project ID
 gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/gcp-pulse
 ```
 
-*   *Note*: This process zips your code, uploads it, builds the container remotely, and stores it. It takes ~2-5 minutes.
+*   *Note*: This process zips your code, uploads it, builds the container remotely using the `Dockerfile`, and stores it. It takes ~2-5 minutes.
 
-### Step 3: Deploy Service
+### Step 2: Deploy to Cloud Run
 
-Deploy the container to Cloud Run.
+Deploy the container to Cloud Run. **This is where you set the API Key.**
+
+**Option A: Using the Command Line (Recommended)**
 
 ```bash
 gcloud run deploy gcp-pulse-service \
@@ -86,36 +56,46 @@ gcloud run deploy gcp-pulse-service \
   --set-env-vars GEMINI_API_KEY="your_actual_gemini_api_key_here"
 ```
 
-**Configuration Flags:**
-*   `--allow-unauthenticated`: Makes the app public. Remove for internal-only apps.
-*   `--set-env-vars`: **Required**. The app needs `GEMINI_API_KEY` to function.
-*   *Note*: Cloud Run automatically injects the `PORT` environment variable (default 8080), and our container dynamically configures Nginx to listen on it. No manual port flag is needed.
+**Option B: Using Google Secret Manager (More Secure)**
 
-### Step 4: Verify
+1.  Create a secret named `gemini-api-key` in Secret Manager.
+2.  Deploy using the secret:
 
-You will see a URL like: `https://gcp-pulse-service-uc.a.run.app`. Click it to verify the deployment.
+```bash
+gcloud run deploy gcp-pulse-service \
+  --image gcr.io/YOUR_PROJECT_ID/gcp-pulse \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest
+```
 
----
+### Step 3: Verify Deployment
+
+1.  After the deployment command finishes, it will output a **Service URL** (e.g., `https://gcp-pulse-service-uc.a.run.app`).
+2.  Open this URL in your browser.
+3.  **Check the Debug Console**:
+    *   Press `Ctrl + ~` (Control + Tilde) to open the built-in Debug Console.
+    *   Go to the **System** tab.
+    *   Verify that **API Key Present** says **"Yes"** (in green).
 
 ## 🛠️ Troubleshooting
 
-**1. "Build failed"**
-*   Ensure `package.json` and `package-lock.json` are present.
-*   Check that `nginx.txt` exists (it's required for the Docker build).
+### "API key is missing" Error
+If you see this error in the app:
+1.  Go to the [Cloud Run Console](https://console.cloud.google.com/run).
+2.  Click on your service (`gcp-pulse-service`).
+3.  Click **Edit & Deploy New Revision**.
+4.  Go to the **Variables & Secrets** tab.
+5.  Ensure `GEMINI_API_KEY` is listed under "Environment variables" and has the correct value.
+6.  Click **Deploy** to update.
 
-**2. 502 Bad Gateway**
-*   This usually means Nginx is running but can't reach the Node.js app.
-*   Check Cloud Run logs. Ensure the Node.js server started successfully on port 3000.
-
-**3. 500 Error / Crash on Start**
+### 500 Error / Crash on Start
 *   Check Cloud Run logs: `gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=gcp-pulse-service" --limit 20`
-*   Common cause: Missing `GEMINI_API_KEY` environment variable.
+*   Ensure the container listens on port 3000 (the default) or that the `PORT` env var is set correctly (Cloud Run sets this automatically to 8080, and our `server.ts` respects it).
 
----
+### 429 Quota Exceeded
+*   This means you've hit the rate limit for the Gemini API.
+*   The app handles this gracefully with retries, but you may need to upgrade your Gemini API plan if you have many users.
 
-## 💻 Local Development
-
-1.  **Install**: `npm install`
-2.  **Env**: Set `GEMINI_API_KEY` in your terminal.
-3.  **Run**: `npm run dev` (Access at `http://localhost:3000`)
 
