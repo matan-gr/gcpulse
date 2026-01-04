@@ -15,6 +15,7 @@ import { useSummarizer } from './hooks/useSummarizer';
 import { ErrorDisplay } from './components/ErrorDisplay';
 import { SummaryModal } from './components/SummaryModal';
 import { PageLoader } from './components/ui/PageLoader';
+import { DebugConsole } from './components/debug/DebugConsole';
 
 // Layout & Navigation
 import { AppLayout } from './components/layout/AppLayout';
@@ -393,6 +394,8 @@ function AppContent() {
           isStreaming={summaryModal.isStreaming}
         />
       )}
+      
+      <DebugConsole />
     </AppLayout>
   );
 }

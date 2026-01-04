@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { FeedItem } from '../types';
 import { extractImage, extractGCPProducts } from '../utils';
 import { Calendar, Tag, ExternalLink, Sparkles, Bookmark, Loader2, Plus, Check, AlertOctagon, Activity, Zap, Box, Link as LinkIcon, ChevronDown, ChevronUp, Clock, ArrowRight, Maximize2 } from 'lucide-react';
@@ -29,41 +30,34 @@ interface FeedCardProps {
 
 import { ErrorBoundary } from './ErrorBoundary';
 
-export const FeedCard = React.memo<FeedCardProps>(({ 
-  item, 
-  index, 
-  onSummarize, 
-  isSummarizing,
-  onSave,
-  isSaved,
-  viewMode,
-  subscribedCategories,
-  onToggleSubscription,
-  onSelectCategory,
-  analysis,
-  isPresentationMode = false,
-  density = 'comfortable',
-  showImages = true
-}) => {
+export const FeedCard = React.memo<FeedCardProps>((props) => {
+  const { item } = props;
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    rootMargin: '400px 0px',
+  });
+
   return (
-    <ErrorBoundary componentName={`FeedCard-${item.title}`}>
-      <FeedCardContent 
-        item={item}
-        index={index}
-        onSummarize={onSummarize}
-        isSummarizing={isSummarizing}
-        onSave={onSave}
-        isSaved={isSaved}
-        viewMode={viewMode}
-        subscribedCategories={subscribedCategories}
-        onToggleSubscription={onToggleSubscription}
-        onSelectCategory={onSelectCategory}
-        analysis={analysis}
-        isPresentationMode={isPresentationMode}
-        density={density}
-        showImages={showImages}
-      />
-    </ErrorBoundary>
+    <div ref={ref} className="min-h-[100px]">
+      {inView ? (
+        <ErrorBoundary componentName={`FeedCard-${item.title}`}>
+          <FeedCardContent {...props} />
+        </ErrorBoundary>
+      ) : (
+        <div className="w-full h-64 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
+                <div className="w-24 h-6 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
+                <div className="w-16 h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            </div>
+            <div className="w-3/4 h-6 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            <div className="space-y-2">
+                <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                <div className="w-2/3 h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+            </div>
+        </div>
+      )}
+    </div>
   );
 });
 
@@ -71,16 +65,16 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
   item, 
   index, 
   onSummarize, 
-  isSummarizing,
-  onSave,
-  isSaved,
-  viewMode,
-  subscribedCategories,
-  onToggleSubscription,
-  onSelectCategory,
-  analysis,
-  isPresentationMode = false,
-  density = 'comfortable',
+  isSummarizing, 
+  onSave, 
+  isSaved, 
+  viewMode, 
+  subscribedCategories, 
+  onToggleSubscription, 
+  onSelectCategory, 
+  analysis, 
+  isPresentationMode = false, 
+  density = 'comfortable', 
   showImages = true
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -447,5 +441,3 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
     </motion.div>
   );
 };
-
-

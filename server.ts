@@ -10,6 +10,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 console.log(`Starting server in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}`);
 
 const FEEDS = [
   { url: "https://cloudblog.withgoogle.com/rss/", name: "Cloud Blog" },

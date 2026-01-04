@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Menu Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-800 rounded-lg shadow-md text-slate-600 dark:text-slate-300"
+        className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-white dark:bg-slate-800 rounded-lg shadow-md text-slate-600 dark:text-slate-300"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -280, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-40 shadow-2xl lg:shadow-none flex flex-col`}
+            className={`fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-[50] shadow-2xl lg:shadow-none flex flex-col`}
           >
             {/* Logo Area */}
             <div className="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800/50 relative overflow-hidden">
@@ -155,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </nav>
 
             {/* User/Footer Area */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            {/* <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center space-x-3 px-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-bold shadow-md">
                   JD
@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-xs text-slate-500 truncate">Technical Account Manager</p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </motion.div>
         )}
       </AnimatePresence>
@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Overlay for mobile */}
       {isOpen && !isDesktop && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-[45]"
           onClick={() => setIsOpen(false)}
         />
       )}

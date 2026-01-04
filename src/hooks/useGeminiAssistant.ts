@@ -113,8 +113,7 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
   `;
 
   const handleError = (error: any) => {
-    let errorMessage = "I encountered an error processing your request.";
-      
+    // Don't log expected quota errors as errors to the console to reduce noise
     const errorStr = JSON.stringify(error);
     const isQuotaError = 
       error.message?.includes('429') || 
@@ -125,8 +124,26 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
       errorStr.includes('RESOURCE_EXHAUSTED') ||
       errorStr.includes('"code":429');
 
+    const isBillingError = errorStr.includes('billing') || errorStr.includes('plan');
+
     if (isQuotaError) {
-      errorMessage = "⚠️ **Quota Exceeded**: You have reached the rate limit for the Gemini API. Please check your billing plan or wait a few minutes before trying again.";
+      console.warn("Gemini API Quota Exceeded:", error.message || "Unknown quota error");
+    } else {
+      console.error("Gemini API Error:", error);
+    }
+
+    let errorMessage = "I encountered an error processing your request.";
+
+    if (isBillingError) {
+      errorMessage = "⚠️ **Billing Quota Exceeded**: You have reached the hard quota limit for your Google Cloud project. Please check your billing details and quota limits in the Google Cloud Console.";
+    } else if (isQuotaError) {
+      errorMessage = "⚠️ **Rate Limit Exceeded**: The system is under heavy load. Please wait a moment before trying again.";
+    } else if (error.message) {
+        // Expose the actual error message for debugging
+        errorMessage = `**Error**: ${error.message}`;
+        if (error.errorDetails) {
+            errorMessage += `\n\n*Details*: ${JSON.stringify(error.errorDetails)}`;
+        }
     }
     
     setMessages(prev => [...prev, {
@@ -137,7 +154,7 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     }]);
   };
 
-  const generateWithRetry = async (call: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
+  const generateWithRetry = async (call: () => Promise<any>, retries = 3, delay = 2000): Promise<any> => {
     try {
       return await call();
     } catch (error: any) {
@@ -150,9 +167,12 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
         error.error?.status === 'RESOURCE_EXHAUSTED' ||
         errorStr.includes('RESOURCE_EXHAUSTED') ||
         errorStr.includes('"code":429');
+      
+      const isBillingError = errorStr.includes('billing') || errorStr.includes('plan');
 
-      if (isQuotaError && retries > 0) {
-        console.warn(`Quota exceeded, retrying in ${delay}ms... (${retries} retries left)`);
+      // Do not retry if it's a hard billing quota error
+      if (isQuotaError && !isBillingError && retries > 0) {
+        console.warn(`Rate limit hit, retrying in ${delay}ms... (${retries} retries left)`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return generateWithRetry(call, retries - 1, delay * 2);
       }

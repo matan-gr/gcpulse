@@ -64,13 +64,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={isSmartFilter ? "Ask AI to find updates..." : "Search updates (Cmd+K)..."}
-          className={`input-field pl-11 pr-32 py-2.5 ${
+          className={`input-field pl-11 pr-32 py-2.5 relative z-10 ${
             isSmartFilter ? 'focus:border-purple-500 ring-purple-500/20' : ''
           }`}
         />
         
         {/* Right Actions */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2 space-x-1 z-20">
           {/* Smart Filter Toggle */}
           <Tooltip content="Toggle AI Smart Search" position="bottom">
             <button

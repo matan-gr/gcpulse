@@ -72,7 +72,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <div className={`flex-1 transition-all duration-300 ${!isPresentationMode && isDesktopSidebarOpen ? 'lg:ml-72' : ''}`}>
         
         {/* Top Header / Controls */}
-        <div className="sticky top-0 z-30 glass border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 grid grid-cols-12 gap-3 sm:gap-4 items-center">
+        <div className="sticky top-0 z-40 glass border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 grid grid-cols-12 gap-3 sm:gap-4 items-center">
           <div className="col-span-8 md:col-span-3 flex items-center">
             {/* Mobile Menu Trigger */}
             <button 
