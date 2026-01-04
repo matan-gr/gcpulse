@@ -5,11 +5,12 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 console.log(`Starting server in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`PORT: ${PORT}`);
 console.log(`GEMINI_API_KEY present: ${!!process.env.GEMINI_API_KEY}`);
 
 const FEEDS = [
@@ -248,10 +249,9 @@ if (!isProduction) {
       }
       
       // Inject env vars
-      const injectedHtml = html.replace(
-        '<script id="__ENV_INJECTION_PLACEHOLDER__"></script>',
-        `<script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`
-      );
+      // We inject before </head> to ensure it's available early and robust against minification changes
+      const envScript = `<script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`;
+      const injectedHtml = html.replace('</head>', `${envScript}</head>`);
       
       res.send(injectedHtml);
     });

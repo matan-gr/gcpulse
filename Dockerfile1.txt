@@ -24,6 +24,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# Accept API Key as a build argument
+ARG GEMINI_API_KEY
+# Persist it as an environment variable in the runtime image
+ENV GEMINI_API_KEY=$GEMINI_API_KEY
+
 # Install dumb-init for proper signal handling and update OS packages
 RUN apk update && apk upgrade && apk add --no-cache dumb-init
 
