@@ -19,17 +19,11 @@ It uses **Google Cloud Build** to build the Docker container and bake in the API
 
 Run the following commands in your terminal.
 
-### 1. Setup Environment Variables
-Define your project details and API key here.
+### 1. Configure Project
+Replace `YOUR_PROJECT_ID` with your actual Google Cloud Project ID.
 
 ```bash
-export PROJECT_ID="your-project-id"
-export REGION="us-central1"
-export API_KEY="your-gemini-api-key"
-export SERVICE_NAME="gcp-pulse-service"
-
-# Configure gcloud to use your project
-gcloud config set project $PROJECT_ID
+gcloud config set project YOUR_PROJECT_ID
 ```
 
 ### 2. Enable Required APIs
@@ -42,32 +36,47 @@ gcloud services enable \
   artifactregistry.googleapis.com
 ```
 
-### 3. Build the Container (with API Key)
-We use **Cloud Build** to build the Docker image.
-*   It uses `cloudbuild.yaml` configuration.
-*   It uses `Dockerfile1.txt` as the Dockerfile.
-*   It **injects your API Key** into the container image during the build process.
+### 3. Create Artifact Registry Repository
+Create a Docker repository named `gcpulse` in Artifact Registry to store your container images.
 
 ```bash
-gcloud builds submit \
-  --config cloudbuild.yaml \
-  --substitutions=_GEMINI_API_KEY="$API_KEY"
+gcloud artifacts repositories create gcpulse \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="GCP Pulse Repository"
+```
+
+### 4. Configure Build File
+Open `cloudbuild.yaml` and replace `YOUR_API_KEY_HERE` with your actual Gemini API Key.
+
+```yaml
+# ...
+'--build-arg', 'GEMINI_API_KEY=AIzaSy...', # Your actual key
+# ...
+```
+
+### 5. Build the Container
+Build the Docker image using Cloud Build.
+
+```bash
+gcloud builds submit --config cloudbuild.yaml
 ```
 
 *Note: This process takes ~2-5 minutes.*
 
-### 4. Deploy to Cloud Run
-Deploy the built image to Google Cloud Run. Since the API key is already baked into the image, we don't need to set it again here (though setting it as a secret is also supported).
+### 6. Deploy to Cloud Run
+Deploy the built image to Google Cloud Run.
+**Replace `YOUR_PROJECT_ID` with your actual Project ID.**
 
 ```bash
-gcloud run deploy $SERVICE_NAME \
-  --image gcr.io/$PROJECT_ID/gcp-pulse \
+gcloud run deploy gcp-pulse-service \
+  --image us-central1-docker.pkg.dev/YOUR_PROJECT_ID/gcpulse/gcp-pulse \
   --platform managed \
-  --region $REGION \
+  --region us-central1 \
   --allow-unauthenticated
 ```
 
-### 5. Verify Deployment
+### 7. Verify Deployment
 1.  The command will output a **Service URL** (e.g., `https://gcp-pulse-service-uc.a.run.app`).
 2.  Open the URL in your browser.
 3.  **Verify API Key**:
