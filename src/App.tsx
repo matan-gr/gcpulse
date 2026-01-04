@@ -25,7 +25,6 @@ import { TabNavigation } from './components/TabNavigation';
 const DiscoverView = lazy(() => import('./views/DiscoverView').then(module => ({ default: module.DiscoverView })));
 const DeprecationsView = lazy(() => import('./views/DeprecationsView').then(module => ({ default: module.DeprecationsView })));
 const ArchitectureView = lazy(() => import('./views/ArchitectureView').then(module => ({ default: module.ArchitectureView })));
-const StandardFeedView = lazy(() => import('./views/StandardFeedView').then(module => ({ default: module.StandardFeedView })));
 const SavedView = lazy(() => import('./views/SavedView').then(module => ({ default: module.SavedView })));
 const IncidentsView = lazy(() => import('./views/IncidentsView').then(module => ({ default: module.IncidentsView })));
 const SecurityView = lazy(() => import('./views/SecurityView').then(module => ({ default: module.SecurityView })));
@@ -364,22 +363,7 @@ function AppContent() {
                 }}
                 onUpdateColumnOrder={(order) => updatePrefs({ columnOrder: order })}
               />
-            ) : (
-              <StandardFeedView
-                items={filteredItems}
-                loading={loading}
-                viewMode={prefs.viewMode}
-                onSummarize={handleSummarize}
-                summarizingId={summarizingId}
-                onSave={handleSave}
-                savedPosts={prefs.savedPosts}
-                subscribedCategories={prefs.subscribedCategories}
-                toggleCategorySubscription={toggleCategorySubscription}
-                handleCategoryChange={handleCategoryChange}
-                analyses={analyses}
-                isPresentationMode={isPresentationMode}
-              />
-            )}
+            ) : null}
           </motion.div>
         </AnimatePresence>
       </Suspense>
