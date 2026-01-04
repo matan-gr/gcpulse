@@ -247,8 +247,8 @@ if (!isProduction) {
       
       // Inject env vars
       const injectedHtml = html.replace(
-        '<head>',
-        `<head><script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`
+        '<!-- __ENV_INJECTION_PLACEHOLDER__ -->',
+        `<script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`
       );
       
       res.send(injectedHtml);

@@ -9,8 +9,16 @@ interface Message {
   timestamp: Date;
 }
 
-const apiKey = window.ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+const getApiKey = () => {
+  const env = (window as any).ENV;
+  if (env && env.GEMINI_API_KEY) {
+    return env.GEMINI_API_KEY;
+  }
+  return process.env.GEMINI_API_KEY || '';
+};
+
+const apiKey = getApiKey();
+const ai = new GoogleGenAI({ apiKey });
 
 export const useGeminiAssistant = (items: FeedItem[]) => {
   const [messages, setMessages] = useState<Message[]>([]);

@@ -296,7 +296,7 @@ export const DebugConsole: React.FC = () => {
                 <h3 className="text-sm font-bold text-slate-400 mb-3 flex items-center"><Terminal size={14} className="mr-2" /> Environment</h3>
                 <div className="space-y-2 text-xs">
                     <div className="flex justify-between"><span className="text-slate-500">Node Env:</span> <span>{process.env.NODE_ENV}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">API Key Present:</span> <span className={(window as any).ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY ? "text-emerald-500" : "text-red-500"}>{(window as any).ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY ? "Yes" : "No"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">API Key Present:</span> <span className={((window as any).ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY) ? "text-emerald-500" : "text-red-500"}>{((window as any).ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY) ? "Yes" : "No"}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">User Agent:</span> <span className="truncate max-w-[200px]">{navigator.userAgent}</span></div>
                     <div className="flex justify-between"><span className="text-slate-500">Platform:</span> <span>{navigator.platform}</span></div>
                 </div>
