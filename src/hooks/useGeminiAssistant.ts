@@ -188,7 +188,23 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     }
   };
 
+  // Cache for the weekly briefing
+  const briefingCache = useRef<{ content: string; timestamp: number } | null>(null);
+  const BRIEFING_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
   const generateBriefing = async () => {
+    // Check cache first
+    if (briefingCache.current && (Date.now() - briefingCache.current.timestamp < BRIEFING_CACHE_DURATION)) {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'model',
+        content: briefingCache.current!.content,
+        timestamp: new Date()
+      }]);
+      setLastUpdated(new Date(briefingCache.current.timestamp));
+      return;
+    }
+
     setLoading(true);
     // Filter for last 7 days only for this specific briefing
     const oneWeekAgo = new Date();
@@ -246,6 +262,9 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
 
       const briefingText = response.text || "Unable to generate briefing.";
       
+      // Update Cache
+      briefingCache.current = { content: briefingText, timestamp: Date.now() };
+
       // Add as a new message instead of clearing
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
@@ -315,12 +334,12 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     }
   };
 
-  // Auto-generate on first load if we have items
-  useEffect(() => {
-    if (items.length > 0 && messages.length === 0) {
-      generateBriefing();
-    }
-  }, [items.length]);
+  // Auto-generate removed to save resources
+  // useEffect(() => {
+  //   if (items.length > 0 && messages.length === 0) {
+  //     generateBriefing();
+  //   }
+  // }, [items.length]);
 
   return {
     messages,

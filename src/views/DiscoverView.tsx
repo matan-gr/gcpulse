@@ -3,10 +3,10 @@ import { FeedItem } from '../types';
 import { StatusDashboard } from '../components/StatusDashboard';
 import { FeedColumn } from '../components/FeedColumn';
 import { AnalysisResult } from '../types';
-import { Loader2, LayoutTemplate, Image as ImageIcon, AlignJustify, Grid, Zap, ArrowRight, Sparkles, Columns, Check, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { Loader2, LayoutTemplate, Image as ImageIcon, AlignJustify, Grid, Columns, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDiscoverView } from '../hooks/useDiscoverView';
 import { UserPreferences } from '../hooks/useUserPreferences';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder } from 'motion/react';
 
 interface DiscoverViewProps {
   items: FeedItem[];
@@ -46,6 +46,27 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
   const [showImages, setShowImages] = useState(true);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
+  // Handle reorder
+  const handleReorder = (newOrder: string[]) => {
+    // We need to merge the new order of visible columns with the hidden columns to keep the full list intact
+    const hiddenCols = prefs.columnOrder.filter(c => !visibleColumns.includes(c));
+    // This simple merge puts hidden columns at the end, which is fine for now
+    onUpdateColumnOrder([...newOrder, ...hiddenCols]);
+  };
+
+  const moveColumn = (column: string, direction: 'up' | 'down') => {
+    const currentIndex = prefs.columnOrder.indexOf(column);
+    if (currentIndex === -1) return;
+    
+    const newOrder = [...prefs.columnOrder];
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    if (targetIndex >= 0 && targetIndex < newOrder.length) {
+      [newOrder[currentIndex], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[currentIndex]];
+      onUpdateColumnOrder(newOrder);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Status Dashboard */}
@@ -83,18 +104,6 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Column Visibility Toggle - Moved outside scrollable area if possible, or use fixed positioning logic */}
-            {/* Since we can't easily break out of overflow-x-auto without a portal, let's restructure the layout */}
-            {/* We will keep the "Customize Columns" button separate from the scrollable view options if space permits, 
-                or we will use a Portal for the dropdown. Given the constraints, a Portal is best, but let's try 
-                moving it to the left side or a separate container first if that's easier. 
-                
-                Actually, the best fix without adding Portal complexity right now is to remove overflow-x-auto from the parent 
-                and handle responsiveness differently, OR use a portal. 
-                
-                Let's try to use a Portal for the dropdown content. 
-                I'll implement a simple Portal for the dropdown menu.
-            */}
              <div className="relative">
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -162,52 +171,76 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
           </div>
         </div>
         
-        {/* Dropdown Portal or Absolute Positioned outside overflow container */}
+        {/* Dropdown Menu */}
         <AnimatePresence>
             {showColumnMenu && (
                 <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute left-4 top-full mt-2 w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 z-50"
-                style={{ marginLeft: '170px' }} // Approximate position adjustment or use a ref-based calculation
+                className="absolute left-4 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 z-50"
+                style={{ marginLeft: '0px' }} 
                 >
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Columns</h3>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Manage Columns</h3>
                     <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-slate-500">{visibleColumns.length} Visible</span>
                 </div>
                 
-                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
-                    {prefs.columnOrder.map((column) => {
+                <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
+                    {prefs.columnOrder.map((column, index) => {
                     const isVisible = !prefs.hiddenColumns.includes(column);
                     return (
                         <motion.div 
                         key={column} 
                         layout
-                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all group ${
                             isVisible 
                             ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700' 
                             : 'bg-transparent border-transparent opacity-50 hover:opacity-100'
                         }`}
                         >
-                        <div className="flex items-center space-x-3">
-                            <div className={`w-1.5 h-1.5 rounded-full ${isVisible ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
-                            <span className={`text-sm font-medium ${isVisible ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500'}`}>{column}</span>
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
+                              <GripVertical size={14} />
+                            </div>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isVisible ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                            <span className={`text-sm font-medium truncate ${isVisible ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500'}`}>{column}</span>
                         </div>
-                        <button
-                            onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleColumnVisibility(column);
-                            }}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                            isVisible 
-                                ? 'text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30' 
-                                : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                            }`}
-                            title={isVisible ? "Hide Column" : "Show Column"}
-                        >
-                            {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
-                        </button>
+                        
+                        <div className="flex items-center space-x-1">
+                           {/* Simple Reorder Buttons (since full DnD is complex to implement perfectly in this snippet without extra libs) */}
+                           <div className="flex flex-col space-y-0.5 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); moveColumn(column, 'up'); }}
+                                disabled={index === 0}
+                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded disabled:opacity-30"
+                              >
+                                <ArrowUp size={10} />
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); moveColumn(column, 'down'); }}
+                                disabled={index === prefs.columnOrder.length - 1}
+                                className="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded disabled:opacity-30"
+                              >
+                                <ArrowDown size={10} />
+                              </button>
+                           </div>
+
+                            <button
+                                onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleColumnVisibility(column);
+                                }}
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                isVisible 
+                                    ? 'text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30' 
+                                    : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                }`}
+                                title={isVisible ? "Hide Column" : "Show Column"}
+                            >
+                                {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                            </button>
+                        </div>
                         </motion.div>
                     );
                     })}
@@ -219,11 +252,12 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
 
       {/* Column Layout */}
       <div id="feed-grid" className="flex flex-wrap justify-center gap-6">
+        <Reorder.Group axis="x" values={visibleColumns} onReorder={handleReorder} className="contents">
         {visibleColumns.map((source: string) => {
           const columnItems = getColumnItems(source);
           
           return (
-            <div key={source} className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] min-w-[300px]">
+            <Reorder.Item key={source} value={source} className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] min-w-[300px]">
               <FeedColumn
                 source={source}
                 items={columnItems}
@@ -240,9 +274,10 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
                 density={density}
                 showImages={showImages}
               />
-            </div>
+            </Reorder.Item>
           );
         })}
+        </Reorder.Group>
       </div>
     </div>
   );

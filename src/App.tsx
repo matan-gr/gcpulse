@@ -13,7 +13,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useInView } from 'react-intersection-observer';
 import { useSummarizer } from './hooks/useSummarizer';
 import { ErrorDisplay } from './components/ErrorDisplay';
-import { SummaryModal } from './components/SummaryModal';
 import { PageLoader } from './components/ui/PageLoader';
 import { DebugConsole } from './components/debug/DebugConsole';
 
@@ -31,6 +30,9 @@ const SecurityView = lazy(() => import('./views/SecurityView').then(module => ({
 const GeminiAssistantView = lazy(() => import('./views/GeminiAssistantView').then(module => ({ default: module.GeminiAssistantView })));
 const DashboardView = lazy(() => import('./views/DashboardView').then(module => ({ default: module.DashboardView })));
 const ToolsView = lazy(() => import('./views/ToolsView').then(module => ({ default: module.ToolsView })));
+
+// Lazy load modals
+const SummaryModal = lazy(() => import('./components/SummaryModal').then(module => ({ default: module.SummaryModal })));
 
 // Initialize Gemini
 const apiKey = window.ENV?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
@@ -368,16 +370,18 @@ function AppContent() {
         </AnimatePresence>
       </Suspense>
 
-      {summaryModal && (
-        <SummaryModal 
-          isOpen={summaryModal.isOpen}
-          onClose={closeSummaryModal}
-          title={summaryModal.title}
-          analysis={summaryModal.analysis}
-          streamContent={summaryModal.streamContent}
-          isStreaming={summaryModal.isStreaming}
-        />
-      )}
+      <Suspense fallback={null}>
+        {summaryModal && (
+          <SummaryModal 
+            isOpen={summaryModal.isOpen}
+            onClose={closeSummaryModal}
+            title={summaryModal.title}
+            analysis={summaryModal.analysis}
+            streamContent={summaryModal.streamContent}
+            isStreaming={summaryModal.isStreaming}
+          />
+        )}
+      </Suspense>
       
       <DebugConsole />
     </AppLayout>

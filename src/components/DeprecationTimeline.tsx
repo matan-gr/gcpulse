@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FeedItem } from '../types';
 import { extractEOLDate } from '../utils';
-import { Calendar, AlertTriangle, ArrowRight, CheckCircle2, AlertOctagon, Clock, CalendarDays, Filter, Hourglass, Download } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Calendar, AlertTriangle, ArrowRight, CheckCircle2, AlertOctagon, Clock, CalendarDays, Filter, Hourglass, Download, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { toast } from 'sonner';
 
@@ -24,8 +24,11 @@ export const DeprecationTimeline: React.FC<DeprecationTimelineProps> = ({ items 
 };
 
 const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items }) => {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'critical' | 'warning'>('all');
+
   const { sortedItems, stats, groups } = useMemo(() => {
-    const processed = items.map(item => {
+    let processed = items.map(item => {
       const eolDate = extractEOLDate(item.contentSnippet || item.content || item.title);
       let daysUntil = null;
       if (eolDate) {
@@ -38,6 +41,22 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
       if (!b.eolDate) return -1;
       return a.eolDate.getTime() - b.eolDate.getTime();
     });
+
+    // Apply Search
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      processed = processed.filter(i => 
+        i.title.toLowerCase().includes(lowerSearch) || 
+        i.contentSnippet?.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    // Apply Filter
+    if (filter === 'critical') {
+      processed = processed.filter(i => i.daysUntil !== null && i.daysUntil < 90 && i.daysUntil >= 0);
+    } else if (filter === 'warning') {
+      processed = processed.filter(i => i.daysUntil !== null && i.daysUntil < 180);
+    }
 
     const stats = {
       critical: processed.filter(i => i.daysUntil !== null && i.daysUntil < 90 && i.daysUntil >= 0).length,
@@ -53,7 +72,7 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
     };
 
     return { sortedItems: processed, stats, groups };
-  }, [items]);
+  }, [items, search, filter]);
 
   const handleExportCalendar = () => {
     if (sortedItems.length === 0) return;
@@ -85,7 +104,7 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
     toast.success("Calendar (.ics) downloaded");
   };
 
-  if (sortedItems.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
@@ -100,58 +119,76 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
+    <div className="max-w-6xl mx-auto py-8 px-4">
       {/* Header & Stats */}
       <div className="mb-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
           <div>
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
               <CalendarDays className="mr-3 text-blue-600" size={32} />
               Deprecation Roadmap
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">
-              Timeline of upcoming service retirements.
+            <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl">
+              Stay ahead of service retirements. Plan your migrations effectively with our timeline view.
             </p>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+             <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search services..." 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full sm:w-64"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <X size={14} />
+                  </button>
+                )}
+             </div>
              <button 
                onClick={handleExportCalendar}
-               className="flex items-center px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+               className="flex items-center justify-center px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm whitespace-nowrap"
              >
                <Download size={16} className="mr-2" />
-               Export Calendar
+               Export .ics
              </button>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
            <StatCard 
-             label="Critical (90d)" 
+             label="Critical (<90d)" 
              value={stats.critical} 
              icon={AlertOctagon} 
              color="red" 
-             active={stats.critical > 0}
+             active={filter === 'critical'}
+             onClick={() => setFilter(filter === 'critical' ? 'all' : 'critical')}
            />
            <StatCard 
-             label="Warning (180d)" 
+             label="Warning (<180d)" 
              value={stats.warning} 
              icon={AlertTriangle} 
              color="amber" 
-             active={stats.warning > 0}
+             active={filter === 'warning'}
+             onClick={() => setFilter(filter === 'warning' ? 'all' : 'warning')}
            />
            <StatCard 
              label="Total Active" 
              value={stats.total} 
              icon={Calendar} 
              color="blue" 
-             active={true}
+             active={filter === 'all'}
+             onClick={() => setFilter('all')}
            />
         </div>
 
         {/* Timeline */}
-        <div className="relative space-y-12 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent dark:before:via-slate-700">
+        <div className="relative space-y-16 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent dark:before:via-slate-800">
           
           {groups.imminent.length > 0 && (
             <TimelineSection title="Imminent Action Required" color="red" items={groups.imminent} />
@@ -169,27 +206,39 @@ const DeprecationTimelineContent: React.FC<DeprecationTimelineProps> = ({ items 
             <TimelineSection title="Past / TBD" color="slate" items={groups.unknown} />
           )}
 
+          {sortedItems.length === 0 && (
+             <div className="text-center py-12">
+                <p className="text-slate-500">No deprecations found matching your criteria.</p>
+                <button onClick={() => { setSearch(''); setFilter('all'); }} className="text-blue-600 hover:underline mt-2 text-sm">Clear filters</button>
+             </div>
+          )}
+
         </div>
       </div>
     </div>
   );
 };
 
-const StatCard = ({ label, value, icon: Icon, color, active }: any) => {
+const StatCard = ({ label, value, icon: Icon, color, active, onClick }: any) => {
   const colors = {
-    red: 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30',
-    amber: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30',
-    blue: 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30',
+    red: 'bg-red-50 text-red-600 border-red-200 ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-950 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30',
+    amber: 'bg-amber-50 text-amber-600 border-amber-200 ring-2 ring-amber-500 ring-offset-2 dark:ring-offset-slate-950 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30',
+    blue: 'bg-blue-50 text-blue-600 border-blue-200 ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-950 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30',
   };
+
+  const inactiveColors = 'bg-white text-slate-500 border-slate-200 hover:border-blue-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:border-slate-700';
   
   return (
-    <div className={`p-4 rounded-xl border ${active ? colors[color as keyof typeof colors] : 'bg-slate-50 text-slate-400 border-slate-100 dark:bg-slate-900 dark:border-slate-800'}`}>
+    <button 
+      onClick={onClick}
+      className={`p-4 rounded-xl border text-left transition-all duration-200 w-full ${active ? colors[color as keyof typeof colors] : inactiveColors}`}
+    >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider opacity-70">{label}</span>
-        <Icon size={16} />
+        <span className="text-xs font-bold uppercase tracking-wider opacity-80">{label}</span>
+        <Icon size={18} />
       </div>
-      <span className="text-2xl font-bold">{value}</span>
-    </div>
+      <span className="text-3xl font-bold tracking-tight">{value}</span>
+    </button>
   );
 };
 

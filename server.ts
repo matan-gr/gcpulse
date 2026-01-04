@@ -3,10 +3,14 @@ import { createServer as createViteServer } from "vite";
 import Parser from "rss-parser";
 import fs from 'fs';
 import path from 'path';
+import compression from 'compression';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Enable compression
+app.use(compression());
 
 console.log(`Starting server in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -18,7 +22,8 @@ const FEEDS = [
   { url: "https://blog.google/products/google-cloud/rss/", name: "Product Updates" },
   { url: "https://cloud.google.com/feeds/gcp-release-notes.xml", name: "Release Notes" },
   { url: "https://docs.cloud.google.com/feeds/google-cloud-security-bulletins.xml", name: "Security Bulletins" },
-  { url: "https://cloud.google.com/feeds/architecture-center-release-notes.xml", name: "Architecture Center" }
+  { url: "https://cloud.google.com/feeds/architecture-center-release-notes.xml", name: "Architecture Center" },
+  { url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCJS9pqu9BzkAMNTmzNMNhvg", name: "Cloud Tech YouTube" }
 ];
 const parser = new Parser();
 

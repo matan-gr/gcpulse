@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { FeedItem } from '../types';
 import { extractImage, extractGCPProducts } from '../utils';
-import { Calendar, Tag, ExternalLink, Sparkles, Bookmark, Loader2, Plus, Check, AlertOctagon, Activity, Zap, Box, Link as LinkIcon, ChevronDown, ChevronUp, Clock, ArrowRight, Maximize2 } from 'lucide-react';
+import { Calendar, Tag, ExternalLink, Sparkles, Bookmark, Loader2, Plus, Check, AlertOctagon, Activity, Zap, Box, Link as LinkIcon, ChevronDown, ChevronUp, Clock, ArrowRight, Maximize2, PlayCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 
 import { AnalysisResult } from '../types';
 import { Tooltip } from './ui/Tooltip';
-import { FeedItemDetailModal } from './FeedItemDetailModal';
+import { useImpactAnalysis } from '../hooks/useImpactAnalysis';
 
 interface FeedCardProps {
   item: FeedItem;
@@ -29,6 +29,8 @@ interface FeedCardProps {
 }
 
 import { ErrorBoundary } from './ErrorBoundary';
+
+const FeedItemDetailModal = React.lazy(() => import('./FeedItemDetailModal').then(module => ({ default: module.FeedItemDetailModal })));
 
 export const FeedCard = React.memo<FeedCardProps>((props) => {
   const { item } = props;
@@ -77,6 +79,7 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
   density = 'comfortable', 
   showImages = true
 }) => {
+  const { analyzedItems, analyzeItem } = useImpactAnalysis();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
@@ -91,6 +94,9 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
   const isIncident = item.source === 'Service Health';
   const isDeprecation = item.source === 'Deprecations';
   const isCompact = density === 'compact';
+  
+  const impactTags = item.impactTags || analyzedItems[item.id!] || [];
+  const isVideo = item.source === 'Cloud Tech YouTube';
 
   // Calculate days until deprecation if applicable
   let daysUntilEOL = 0;
@@ -290,15 +296,46 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
                 <span className={`badge ${
                   item.source === 'Release Notes' ? 'badge-orange' :
                   item.source === 'Product Updates' ? 'badge-green' :
+                  item.source === 'Cloud Tech YouTube' ? 'bg-red-100 text-red-700 border-red-200' :
                   'badge-blue'
                 }`}>
                   {item.source}
                 </span>
+                {isVideo && <PlayCircle size={14} className="text-red-600" />}
              </div>
              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center">
                 {date}
              </span>
           </div>
+          
+          {/* Impact Tags */}
+          {impactTags.length > 0 && !isCompact && (
+            <div className="mb-2 flex flex-wrap gap-1">
+              {impactTags.map((tag, i) => (
+                <span key={i} className={`
+                  inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border
+                  ${tag.level === 'high' ? 'bg-red-50 text-red-700 border-red-200' : 
+                    tag.level === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                    'bg-blue-50 text-blue-700 border-blue-200'}
+                `}>
+                  {tag.label}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Manual Analysis Trigger */}
+          {impactTags.length === 0 && !isCompact && !isIncident && !isDeprecation && !isVideo && (
+             <button 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 analyzeItem(item);
+               }}
+               className="mb-2 text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 px-2 py-1 rounded transition-colors flex items-center w-fit"
+             >
+               <Zap size={10} className="mr-1" /> Analyze Impact
+             </button>
+          ) }
           
           <h3 className={`font-bold text-slate-900 dark:text-white ${isCompact ? 'mb-1 text-sm' : 'mb-3 text-lg'} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight`}>
               <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
@@ -428,16 +465,20 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
         </div>
       </div>
       
-      <FeedItemDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        item={item}
-        analysis={analysis}
-        onSave={onSave}
-        isSaved={isSaved}
-        onSummarize={onSummarize}
-        isSummarizing={isSummarizing}
-      />
+      <React.Suspense fallback={null}>
+        {isDetailModalOpen && (
+          <FeedItemDetailModal
+            isOpen={isDetailModalOpen}
+            onClose={() => setIsDetailModalOpen(false)}
+            item={item}
+            analysis={analysis}
+            onSave={onSave}
+            isSaved={isSaved}
+            onSummarize={onSummarize}
+            isSummarizing={isSummarizing}
+          />
+        )}
+      </React.Suspense>
     </motion.div>
   );
 };

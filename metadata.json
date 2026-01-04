@@ -1,5 +1,5 @@
 {
-  "name": "GCP Info Panel",
+  "name": "GCP Pulse",
   "description": "A comprehensive, real-time dashboard for Google Cloud Technical Account Managers, featuring AI-powered insights, incident tracking, and strategic updates.",
   "requestFramePermissions": []
 }

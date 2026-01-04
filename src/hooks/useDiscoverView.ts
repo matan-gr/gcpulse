@@ -4,8 +4,9 @@ import { UserPreferences } from './useUserPreferences';
 
 export const useDiscoverView = (items: FeedItem[], prefs: UserPreferences) => {
   const visibleColumns = useMemo(() => {
+    const excludedSources = ['Deprecations', 'Service Health', 'Architecture Center', 'Security Bulletins', 'Open Source Blog'];
     return prefs.columnOrder
-      .filter((source: string) => source !== 'Deprecations' && source !== 'Service Health' && !prefs.hiddenColumns?.includes(source));
+      .filter((source: string) => !excludedSources.includes(source) && !prefs.hiddenColumns?.includes(source));
   }, [prefs.columnOrder, prefs.hiddenColumns]);
 
   const getColumnItems = (source: string) => {

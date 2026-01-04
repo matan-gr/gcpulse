@@ -17,7 +17,7 @@ const DEFAULT_PREFS: UserPreferences = {
   savedPosts: [],
   filterCategory: null,
   filterDateRange: null,
-  columnOrder: ['Cloud Blog', 'Product Updates', 'Release Notes'],
+  columnOrder: ['Cloud Blog', 'Product Updates', 'Release Notes', 'Cloud Tech YouTube'],
   hiddenColumns: []
 };
 
@@ -25,7 +25,18 @@ export function useUserPreferences() {
   const [prefs, setPrefs] = useState<UserPreferences>(() => {
     const saved = localStorage.getItem('user_prefs');
     if (saved) {
-      return { ...DEFAULT_PREFS, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      // Merge saved prefs with defaults to ensure new columns appear
+      return { 
+        ...DEFAULT_PREFS, 
+        ...parsed,
+        columnOrder: [
+          ...new Set([
+            ...(parsed.columnOrder || []), 
+            ...DEFAULT_PREFS.columnOrder
+          ])
+        ]
+      };
     }
     
     return DEFAULT_PREFS;

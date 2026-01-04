@@ -19,6 +19,14 @@ export interface FeedItem {
   description?: string;
   updates?: Array<{ created: string; text: string }>;
   products?: string[];
+  
+  // New fields
+  videoUrl?: string;
+  impactTags?: {
+    type: 'security' | 'cost' | 'feature' | 'deprecation' | 'performance';
+    level: 'high' | 'medium' | 'low';
+    label: string;
+  }[];
 }
 
 export interface Feed {

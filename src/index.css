@@ -1,5 +1,4 @@
-/* Import Fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+/* Import Fonts handled in index.html for performance */
 
 @import "tailwindcss";
 
@@ -14,26 +13,40 @@
   --color-brand-secondary: #4f46e5; /* indigo-600 */
   --color-brand-accent: #0ea5e9; /* sky-500 */
   
-  /* Backgrounds - Light Mode */
+  /* Backgrounds - Light Mode (Crisp & Clean) */
   --color-bg-app: #f8fafc; /* slate-50 */
   --color-bg-card: #ffffff;
   
   /* Backgrounds - Dark Mode (Deep & Rich) */
   --color-bg-app-dark: #020617; /* slate-950 */
   --color-bg-card-dark: #0f172a; /* slate-900 */
+
+  /* Semantic Text Colors */
+  --color-text-primary: #0f172a; /* slate-900 */
+  --color-text-secondary: #475569; /* slate-600 */
+  --color-text-primary-dark: #f8fafc; /* slate-50 */
+  --color-text-secondary-dark: #94a3b8; /* slate-400 */
+
+  /* Semantic Borders */
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-border-dark: #1e293b; /* slate-800 */
 }
 
 body {
   font-family: var(--font-sans);
-  @apply antialiased text-slate-900 dark:text-slate-100 bg-[var(--color-bg-app)] dark:bg-[var(--color-bg-app-dark)];
-  background-image: radial-gradient(circle at top center, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+  @apply antialiased text-[var(--color-text-primary)] dark:text-[var(--color-text-primary-dark)] bg-[var(--color-bg-app)] dark:bg-[var(--color-bg-app-dark)];
+  /* Light mode: Premium mesh gradient */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.03) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
 /* Dark mode background enhancement */
 :is(.dark body) {
   background-image: 
-    radial-gradient(circle at 60% -10%, rgba(30, 58, 138, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 50% -20%, rgba(30, 58, 138, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 1) 0%, transparent 100%);
 }
 
@@ -53,11 +66,11 @@ body {
 
 /* Glassmorphism Utilities - Refined */
 .glass {
-  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-slate-900/70;
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/60 dark:border-slate-800/60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/70;
 }
 
 .glass-card {
-  @apply bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-lg transition-all duration-300;
+  @apply bg-white/70 dark:bg-slate-900/90 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300;
 }
 
 .mask-linear-fade {
@@ -106,13 +119,13 @@ body {
     @apply p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors active:scale-95;
   }
 
-  /* Cards */
+  /* Cards - Enhanced for Light Mode */
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden;
+    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden;
   }
 
   .card-hover {
-    @apply hover:shadow-xl hover:-translate-y-1 hover:border-blue-300/50 dark:hover:border-blue-600/40 transition-all duration-300 hover:shadow-blue-500/10 dark:hover:shadow-blue-500/10;
+    @apply hover:shadow-xl hover:-translate-y-1 hover:border-blue-200/60 dark:hover:border-blue-600/40 transition-all duration-300 hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10;
   }
 
   /* Badges - More Vibrant */

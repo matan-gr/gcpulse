@@ -76,13 +76,13 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({ items, loading }) 
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <div className="flex items-center justify-center md:justify-start space-x-3 mb-2">
-              {activeIncidents.length === 0 ? <CheckCircle2 size={32} /> : <AlertOctagon size={32} className="animate-pulse" />}
-              <span className="text-sm font-bold uppercase tracking-widest opacity-90">System Status</span>
+              {activeIncidents.length === 0 ? <CheckCircle2 size={32} className="text-white" /> : <AlertOctagon size={32} className="animate-pulse text-white" />}
+              <span className="text-sm font-bold uppercase tracking-widest text-white/90">System Status</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-white">
               {activeIncidents.length === 0 ? 'All Systems Operational' : `${activeIncidents.length} Active Incident${activeIncidents.length > 1 ? 's' : ''}`}
             </h1>
-            <p className="text-lg opacity-90 max-w-2xl">
+            <p className="text-lg text-white/90 max-w-2xl">
               {activeIncidents.length === 0 
                 ? 'Google Cloud Platform services are running normally. No active incidents reported.' 
                 : 'Our engineering teams are investigating issues affecting some Google Cloud services.'}

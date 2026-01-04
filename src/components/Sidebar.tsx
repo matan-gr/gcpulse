@@ -96,8 +96,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ].map((section, idx) => (
                 <div key={idx}>
                   <div className="flex items-center px-4 mb-3">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</span>
-                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800 ml-3" />
+                    <span className="text-[10px] font-bold text-[var(--color-text-secondary)] dark:text-[var(--color-text-secondary-dark)] uppercase tracking-widest">{section.title}</span>
+                    <div className="flex-1 h-px bg-[var(--color-border)] dark:bg-[var(--color-border-dark)] ml-3" />
                   </div>
                   <div className="space-y-1">
                     {section.items.map((item) => {
@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           className={`relative w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group overflow-hidden ${
                             isActive 
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm' 
-                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
+                              : 'text-[var(--color-text-secondary)] dark:text-[var(--color-text-secondary-dark)] hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[var(--color-text-primary)] dark:hover:text-[var(--color-text-primary-dark)]'
                           }`}
                         >
                           {isActive && (
