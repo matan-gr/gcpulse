@@ -240,7 +240,7 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className={`card card-hover flex ${
+      className={`card card-hover tech-border flex ${
         isListView ? 'flex-row min-h-[180px]' : 'flex-col h-full'
       } group relative ${isSaved ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900' : ''}`}
     >

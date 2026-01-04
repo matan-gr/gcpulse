@@ -121,11 +121,21 @@ body {
 
   /* Cards - Enhanced for Light Mode */
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden;
+    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden relative;
   }
 
   .card-hover {
     @apply hover:shadow-xl hover:-translate-y-1 hover:border-blue-200/60 dark:hover:border-blue-600/40 transition-all duration-300 hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10;
+  }
+
+  /* Tech Border Effect */
+  .tech-border {
+    @apply relative after:absolute after:inset-0 after:rounded-xl after:border after:border-transparent after:bg-gradient-to-r after:from-blue-500/0 after:via-blue-500/10 after:to-blue-500/0 after:opacity-0 hover:after:opacity-100 after:transition-opacity after:pointer-events-none;
+  }
+  
+  /* Smart Glow */
+  .smart-glow {
+    @apply shadow-[0_0_15px_rgba(59,130,246,0.1)] dark:shadow-[0_0_15px_rgba(59,130,246,0.2)];
   }
 
   /* Badges - More Vibrant */

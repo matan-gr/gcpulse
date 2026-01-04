@@ -187,7 +187,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
                 </div>
                 
                 <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
-                    {prefs.columnOrder.map((column, index) => {
+                    {prefs.columnOrder.filter(c => !['Deprecations', 'Service Health', 'Architecture Center', 'Security Bulletins', 'Open Source Blog'].includes(c)).map((column, index) => {
                     const isVisible = !prefs.hiddenColumns.includes(column);
                     return (
                         <motion.div 

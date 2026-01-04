@@ -162,7 +162,7 @@ export const useGeminiAssistant = (items: FeedItem[]) => {
     }]);
   };
 
-  const generateWithRetry = async (call: () => Promise<any>, retries = 3, delay = 2000): Promise<any> => {
+  const generateWithRetry = async (call: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
     try {
       return await call();
     } catch (error: any) {

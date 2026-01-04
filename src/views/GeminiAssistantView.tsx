@@ -124,7 +124,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
   }), []);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 h-[calc(100vh-140px)] flex flex-col">
+    <div className="max-w-7xl mx-auto space-y-6 h-[calc(100vh-100px)] flex flex-col">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
         <div>
@@ -204,10 +204,10 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
         
         {/* Left Column: Chat History */}
-        <div className="lg:col-span-8 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden relative">
+        <div className="lg:col-span-9 flex flex-col min-h-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden relative">
           
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar relative z-10">
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar relative z-10">
             {messages.length === 0 && loading && (
                <div className="flex flex-col items-center justify-center h-full space-y-6">
                   <div className="relative">
@@ -242,12 +242,12 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
                     {msg.role === 'model' ? <Bot size={20} /> : <User size={20} />}
                   </div>
                   
-                  <div className={`flex-1 max-w-[90%] rounded-2xl p-6 shadow-sm ${
+                  <div className={`flex-1 max-w-[95%] rounded-2xl p-6 shadow-sm ${
                     msg.role === 'model'
                       ? 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 text-slate-800 dark:text-slate-200'
                       : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-md'
                   }`}>
-                    <div className="text-sm leading-relaxed">
+                    <div className="text-base leading-relaxed prose dark:prose-invert max-w-none">
                       <ReactMarkdown components={msg.role === 'model' ? MarkdownComponents : undefined}>
                         {msg.content}
                       </ReactMarkdown>
@@ -274,7 +274,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
           </div>
 
           {/* Input Area */}
-          <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative z-20">
+          <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 relative z-20">
             <div className="relative flex items-center shadow-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-purple-500/50 focus-within:border-purple-500 transition-all">
               <input 
                 type="text" 
@@ -282,18 +282,18 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(input)}
                 placeholder="Ask a follow-up question about the briefing..." 
-                className="w-full pl-4 pr-12 py-4 bg-transparent border-none text-sm focus:ring-0 outline-none placeholder:text-slate-400"
+                className="w-full pl-6 pr-14 py-4 bg-transparent border-none text-base focus:ring-0 outline-none placeholder:text-slate-400"
                 disabled={loading}
               />
               <button 
                 onClick={() => handleSendMessage(input)}
                 disabled={!input.trim() || loading}
-                className="absolute right-2 p-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all"
+                className="absolute right-2 p-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all"
               >
-                <Send size={18} />
+                <Send size={20} />
               </button>
             </div>
-            <div className="text-center mt-2">
+            <div className="text-center mt-3">
                <p className="text-[10px] text-slate-400">
                  AI can make mistakes. Verify important information.
                </p>
@@ -302,7 +302,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
         </div>
 
         {/* Right Column: Key Stats / Quick Actions */}
-        <div className="lg:col-span-4 space-y-6 overflow-y-auto custom-scrollbar pr-1">
+        <div className="lg:col-span-3 space-y-6 overflow-y-auto custom-scrollbar pr-1">
           {/* Status Card */}
           <div className="card p-6 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-t-4 border-t-purple-500 shadow-md">
             <div className="flex items-center justify-between mb-6">

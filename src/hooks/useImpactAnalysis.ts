@@ -24,7 +24,7 @@ export const useImpactAnalysis = () => {
   const processingRef = useRef(false);
   
   // Exponential backoff retry logic
-  const retryWithBackoff = async (fn: () => Promise<any>, retries = 3, delay = 2000): Promise<any> => {
+  const retryWithBackoff = async (fn: () => Promise<any>, retries = 3, delay = 1000): Promise<any> => {
     try {
       return await fn();
     } catch (error: any) {
@@ -46,7 +46,7 @@ export const useImpactAnalysis = () => {
       if (task) {
         await task();
         // Base delay between requests
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
     processingRef.current = false;
