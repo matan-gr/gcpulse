@@ -233,8 +233,10 @@ if (!isProduction) {
   });
   app.use(vite.middlewares);
 } else {
-  // Serve static files in production
-  app.use(express.static('dist'));
+  // Serve static files in production, but do not serve index.html automatically
+  // This ensures that requests for / or /index.html fall through to the handler below
+  // where we inject the environment variables.
+  app.use(express.static('dist', { index: false }));
   
   // SPA fallback with runtime env injection
   app.get('*', (req, res) => {
@@ -247,7 +249,7 @@ if (!isProduction) {
       
       // Inject env vars
       const injectedHtml = html.replace(
-        '<!-- __ENV_INJECTION_PLACEHOLDER__ -->',
+        '<script id="__ENV_INJECTION_PLACEHOLDER__"></script>',
         `<script>window.ENV = { GEMINI_API_KEY: "${process.env.GEMINI_API_KEY || ''}" };</script>`
       );
       

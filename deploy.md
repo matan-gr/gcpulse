@@ -18,66 +18,95 @@ The application **requires** a valid Google Gemini API Key to function. This key
 2.  Powering the AI Assistant chat.
 3.  Smart filtering of feed items.
 
-**You must provide this key as an environment variable (`GEMINI_API_KEY`) when deploying.**
+### 1. Get an API Key
+If you don't have one yet, get a free API key from Google AI Studio:
+👉 **[Get API Key](https://aistudio.google.com/app/apikey)**
 
-## 🚀 Deploying to Google Cloud Run
+### 2. How to Provide the Key
+You must provide this key as an environment variable named **`GEMINI_API_KEY`** when running the container.
 
-### Prerequisites
+---
 
-1.  **Google Cloud Project**: Create one at [console.cloud.google.com](https://console.cloud.google.com/).
-2.  **Billing Enabled**: Ensure billing is active.
-3.  **Google Cloud SDK (gcloud)**: Installed and authenticated.
-    *   Run `gcloud auth login`
-    *   Run `gcloud config set project YOUR_PROJECT_ID`
+## ⚡ Quick Start: CLI Deployment with Secrets (Recommended)
 
-### Step 1: Build and Push the Container
+Follow these commands to securely deploy your app using Google Secret Manager.
 
-Use **Cloud Build** to build the Docker image and store it in Google Container Registry (GCR) or Artifact Registry.
-
+### 1. Setup Environment Variables
 ```bash
-# Replace YOUR_PROJECT_ID with your actual project ID
-gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/gcp-pulse
+export PROJECT_ID="your-project-id"
+export REGION="us-central1"
+export API_KEY="your-gemini-api-key"
+export SERVICE_NAME="gcp-pulse-service"
+
+gcloud config set project $PROJECT_ID
 ```
 
-*   *Note*: This process zips your code, uploads it, builds the container remotely using the `Dockerfile`, and stores it. It takes ~2-5 minutes.
-
-### Step 2: Deploy to Cloud Run
-
-Deploy the container to Cloud Run. **This is where you set the API Key.**
-
-**Option A: Using the Command Line (Recommended)**
-
+### 2. Enable Required APIs
 ```bash
-gcloud run deploy gcp-pulse-service \
-  --image gcr.io/YOUR_PROJECT_ID/gcp-pulse \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars GEMINI_API_KEY="your_actual_gemini_api_key_here"
+gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  secretmanager.googleapis.com \
+  artifactregistry.googleapis.com
 ```
 
-**Option B: Using Google Secret Manager (More Secure)**
-
-1.  Create a secret named `gemini-api-key` in Secret Manager.
-2.  Deploy using the secret:
-
+### 3. Create the Secret
+Store your API key securely in Secret Manager.
 ```bash
-gcloud run deploy gcp-pulse-service \
-  --image gcr.io/YOUR_PROJECT_ID/gcp-pulse \
+printf "$API_KEY" | gcloud secrets create gemini-api-key --data-file=-
+```
+
+### 4. Build the Container
+Build the Docker image using Cloud Build.
+```bash
+gcloud builds submit --tag gcr.io/$PROJECT_ID/gcp-pulse
+```
+
+### 5. Grant Access to the Secret
+Allow the Cloud Run service account to access the secret.
+```bash
+# Get the default Compute Engine service account (used by Cloud Run by default)
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+SERVICE_ACCOUNT="$PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+
+# Grant the 'Secret Accessor' role
+gcloud secrets add-iam-policy-binding gemini-api-key \
+    --member="serviceAccount:$SERVICE_ACCOUNT" \
+    --role="roles/secretmanager.secretAccessor"
+```
+
+### 6. Deploy to Cloud Run
+Deploy the service and inject the secret as an environment variable.
+```bash
+gcloud run deploy $SERVICE_NAME \
+  --image gcr.io/$PROJECT_ID/gcp-pulse \
   --platform managed \
-  --region us-central1 \
+  --region $REGION \
   --allow-unauthenticated \
   --set-secrets GEMINI_API_KEY=gemini-api-key:latest
 ```
 
-### Step 3: Verify Deployment
+---
 
-1.  After the deployment command finishes, it will output a **Service URL** (e.g., `https://gcp-pulse-service-uc.a.run.app`).
-2.  Open this URL in your browser.
-3.  **Check the Debug Console**:
-    *   Press `Ctrl + ~` (Control + Tilde) to open the built-in Debug Console.
-    *   Go to the **System** tab.
-    *   Verify that **API Key Present** says **"Yes"** (in green).
+## 🐳 Local Docker Testing (Optional)
+
+Before deploying to the cloud, you can test the production build locally using Docker.
+
+1.  **Build the Image**:
+    ```bash
+    docker build -t gcp-pulse .
+    ```
+
+2.  **Run the Container**:
+    Replace `your_key_here` with your actual API key.
+    ```bash
+    docker run -p 3000:3000 -e GEMINI_API_KEY="your_key_here" gcp-pulse
+    ```
+
+3.  **Access the App**:
+    Open `http://localhost:3000`.
+
+---
 
 ## 🛠️ Troubleshooting
 
