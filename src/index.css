@@ -93,12 +93,16 @@
     --ring: 224 76% 48%;
   }
 
+  html {
+    @apply scroll-smooth;
+  }
+
   * {
     @apply border-border;
   }
   
   body {
-    @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-[#0B1120] dark:text-slate-100 dark:selection:bg-blue-900/30 dark:selection:text-blue-100;
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-[#0B1120] dark:text-slate-100 dark:selection:bg-blue-900/30 dark:selection:text-blue-100 transition-colors duration-300;
     font-feature-settings: "cv11", "ss01";
     /* Light mode: Premium mesh gradient */
     background-image: 
@@ -113,6 +117,11 @@
     background-image: 
       radial-gradient(circle at 50% -20%, rgba(30, 58, 138, 0.15) 0%, transparent 40%),
       radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 1) 0%, transparent 100%);
+  }
+
+  /* Typography Defaults */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-bold text-slate-900 dark:text-white;
   }
 
   /* Enterprise Scrollbar */
@@ -243,54 +252,45 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400;
   }
+
+  /* Prose Customization - Improved Readability */
+  .prose {
+    @apply text-slate-600 dark:text-slate-300;
+  }
+
+  .prose a {
+    @apply text-blue-600 dark:text-blue-400 no-underline hover:underline font-semibold decoration-2 underline-offset-2 transition-colors;
+  }
+
+  .prose strong {
+    @apply text-slate-900 dark:text-white font-bold;
+  }
+
+  .prose code {
+    @apply font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md text-pink-600 dark:text-pink-400 border border-slate-200 dark:border-slate-700;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-blue-500/30 dark:border-blue-400/30 pl-4 italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/30 py-2 pr-2 rounded-r-lg;
+  }
+
+  .prose ul > li::marker {
+    @apply text-slate-400 dark:text-slate-500;
+  }
 }
 
-/* Typography Enhancements */
-h1, h2, h3, h4, h5, h6 {
-  @apply tracking-tight font-bold text-slate-900 dark:text-white;
-}
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 
-/* Smooth Transitions */
-* {
-  @apply transition-colors duration-200 ease-in-out;
-}
-
-/* Prose Customization - Improved Readability */
-.prose {
-  @apply text-slate-600 dark:text-slate-300;
-}
-
-.prose a {
-  @apply text-blue-600 dark:text-blue-400 no-underline hover:underline font-semibold decoration-2 underline-offset-2 transition-colors;
-}
-
-.prose strong {
-  @apply text-slate-900 dark:text-white font-bold;
-}
-
-.prose code {
-  @apply font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md text-pink-600 dark:text-pink-400 border border-slate-200 dark:border-slate-700;
-}
-
-.prose blockquote {
-  @apply border-l-4 border-blue-500/30 dark:border-blue-400/30 pl-4 italic text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/30 py-2 pr-2 rounded-r-lg;
-}
-
-.prose ul > li::marker {
-  @apply text-slate-400 dark:text-slate-500;
-}
-
-/* Custom Utilities */
-.text-balance {
-  text-wrap: balance;
-}
-
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: theme('colors.slate.300') transparent;
-}
-.dark .custom-scrollbar {
-  scrollbar-color: theme('colors.slate.700') transparent;
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.slate.300') transparent;
+  }
+  .dark .custom-scrollbar {
+    scrollbar-color: theme('colors.slate.700') transparent;
+  }
 }
 
 /* Print Styles for Executive Briefing */

@@ -240,6 +240,90 @@ export const useDashboardStats = (items: FeedItem[]) => {
       .slice(0, 5);
   }, [items]);
 
+  // 9. Risk Heatmap Data (Composite Score)
+  const riskHeatmapData = useMemo(() => {
+    const productRisk: Record<string, number> = {};
+    
+    items.forEach(item => {
+      const products = extractGCPProducts(item.title + " " + item.contentSnippet);
+      let weight = 0;
+      
+      if (item.source === 'Security Bulletins') {
+        if (item.title.toLowerCase().includes('critical')) weight = 10;
+        else if (item.title.toLowerCase().includes('high')) weight = 5;
+        else weight = 2;
+      } else if (item.source === 'Service Health' && item.isActive) {
+        weight = 8;
+      } else if (item.source === 'Deprecations') {
+        weight = 3;
+      }
+
+      if (weight > 0) {
+        products.forEach(p => productRisk[p] = (productRisk[p] || 0) + weight);
+      }
+    });
+
+    return Object.entries(productRisk)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 12); // Top 12 risky products
+  }, [items]);
+
+  // 10. Strategic Recommendations (Heuristic)
+  const strategicRecommendations = useMemo(() => {
+    const recs: { title: string; description: string; type: 'security' | 'optimization' | 'reliability' }[] = [];
+    
+    // Security Heuristics
+    const recentCriticalSec = items.filter(i => i.source === 'Security Bulletins' && i.title.toLowerCase().includes('critical')).length;
+    if (recentCriticalSec > 2) {
+      recs.push({
+        title: "Elevated Security Posture Required",
+        description: `Detected ${recentCriticalSec} critical security bulletins recently. Initiate a comprehensive vulnerability scan across all active projects immediately.`,
+        type: 'security'
+      });
+    }
+
+    // Reliability Heuristics
+    const activeIncidents = items.filter(i => i.source === 'Service Health' && i.isActive).length;
+    if (activeIncidents > 0) {
+      recs.push({
+        title: "Active Incident Response",
+        description: `There are ${activeIncidents} active service incidents. Ensure your status dashboard is visible to stakeholders and verify failover protocols for affected regions.`,
+        type: 'reliability'
+      });
+    }
+
+    // Deprecation Heuristics
+    const imminentDeprecations = items.filter(i => i.source === 'Deprecations' && i.contentSnippet?.includes('2024')).length; // Adjust year dynamically in real app
+    if (imminentDeprecations > 5) {
+      recs.push({
+        title: "Deprecation Migration Sprint",
+        description: "High volume of imminent deprecations detected. Schedule a dedicated 'Migration Sprint' to address technical debt before EOL dates.",
+        type: 'optimization'
+      });
+    }
+
+    // Innovation/Architecture
+    const archUpdates = items.filter(i => i.source === 'Architecture Center').length;
+    if (archUpdates > 5) {
+      recs.push({
+        title: "Architecture Review Opportunity",
+        description: "Significant updates to the Architecture Center. Review new reference patterns for potential cost optimization and performance gains.",
+        type: 'optimization'
+      });
+    }
+
+    if (recs.length === 0) {
+       recs.push({
+        title: "Routine Health Check",
+        description: "Systems appear stable. Recommend a routine review of IAM policies and resource utilization to maintain optimal hygiene.",
+        type: 'optimization'
+      });
+    }
+
+    return recs.slice(0, 4);
+  }, [items]);
+
   return {
     stats,
     securityTrendData,
@@ -250,6 +334,8 @@ export const useDashboardStats = (items: FeedItem[]) => {
     productMomentumData,
     topLaunches,
     incidentTrendData,
-    recentIncidents
+    recentIncidents,
+    riskHeatmapData,
+    strategicRecommendations
   };
 };

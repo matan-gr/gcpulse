@@ -50,35 +50,35 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
 
   const MarkdownComponents = useMemo(() => ({
     h1: ({...props}: any) => (
-      <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 mb-6 pb-2 border-b border-slate-200 dark:border-slate-700/50" {...props} />
+      <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-8 pb-4 border-b border-slate-200 dark:border-slate-700/50 tracking-tight" {...props} />
     ),
     h2: ({...props}: any) => (
-      <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mt-8 mb-4 flex items-center" {...props} />
+      <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 mt-10 mb-5 flex items-center tracking-tight" {...props} />
     ),
     h3: ({...props}: any) => (
-      <h3 className="text-base font-bold text-slate-700 dark:text-slate-200 mt-6 mb-3 uppercase tracking-wide" {...props} />
+      <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-300 mt-8 mb-3" {...props} />
     ),
     strong: ({...props}: any) => (
-      <strong className="font-bold text-slate-900 dark:text-white" {...props} />
+      <strong className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/50 px-1 rounded" {...props} />
     ),
     ul: ({...props}: any) => (
-      <ul className="space-y-2 my-4 list-disc list-outside ml-5 text-slate-700 dark:text-slate-300 marker:text-slate-400" {...props} />
+      <ul className="space-y-3 my-6 list-disc list-outside ml-6 text-slate-700 dark:text-slate-300 marker:text-blue-500" {...props} />
     ),
     ol: ({...props}: any) => (
-      <ol className="space-y-2 my-4 list-decimal list-outside ml-5 text-slate-700 dark:text-slate-300 marker:text-slate-400" {...props} />
+      <ol className="space-y-3 my-6 list-decimal list-outside ml-6 text-slate-700 dark:text-slate-300 marker:text-blue-500" {...props} />
     ),
     li: ({...props}: any) => (
-      <li className="leading-relaxed pl-1">{props.children}</li>
+      <li className="leading-7 pl-2">{props.children}</li>
     ),
     blockquote: ({...props}: any) => (
-      <blockquote className="pl-4 border-l-4 border-purple-500/50 bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-900/20 dark:to-transparent py-3 pr-4 rounded-r-lg my-6 text-slate-700 dark:text-slate-300 italic shadow-sm" {...props} />
+      <blockquote className="pl-6 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 py-4 pr-6 rounded-r-xl my-8 text-slate-800 dark:text-slate-200 italic shadow-sm relative" {...props} />
     ),
     p: ({...props}: any) => (
-      <p className="mb-4 leading-7 text-slate-700 dark:text-slate-300" {...props} />
+      <p className="mb-6 leading-8 text-slate-800 dark:text-slate-200 text-[15px]" {...props} />
     ),
     pre: ({children}: any) => <>{children}</>,
     a: ({...props}: any) => (
-      <a className="text-blue-600 dark:text-blue-400 hover:underline font-medium break-all transition-colors inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" {...props} />
+      <a className="text-blue-600 dark:text-blue-400 hover:underline font-bold break-all transition-colors inline-flex items-center gap-1 decoration-2 underline-offset-2" target="_blank" rel="noopener noreferrer" {...props} />
     ),
     code: ({node, inline, className, children, ...props}: any) => {
       const match = /language-(\w+)/.exec(className || '');
@@ -94,7 +94,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
           </pre>
         </div>
       ) : (
-        <code className="font-mono text-xs font-medium bg-slate-100 dark:bg-slate-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700" {...props}>
+        <code className="font-mono text-xs font-bold bg-slate-100 dark:bg-slate-800 text-pink-600 dark:text-pink-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700" {...props}>
           {children}
         </code>
       );
@@ -211,6 +211,74 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
           
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar relative z-10 bg-slate-50/50 dark:bg-slate-900/50">
+            {messages.length === 0 && !loading && (
+              <div className="h-full flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-3xl flex items-center justify-center mb-6 shadow-sm border border-white dark:border-slate-800">
+                  <Sparkles size={40} className="text-purple-600 dark:text-purple-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                  Enterprise Intelligence Assistant
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 max-w-lg mb-8 leading-relaxed">
+                  I've analyzed {items.length} recent updates from your feed. Select a quick action below or ask a specific question to get started.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
+                  <button 
+                    onClick={generateBriefing}
+                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md transition-all text-left group"
+                  >
+                    <div className="flex items-center mb-2">
+                      <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg mr-3 text-purple-600 dark:text-purple-400">
+                        <Activity size={18} />
+                      </div>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">Generate Briefing</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Create a strategic weekly summary of key updates and risks.</p>
+                  </button>
+
+                  <button 
+                     onClick={() => handleSendMessage("What are the top 3 security risks I should be aware of this week?")}
+                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-red-400 dark:hover:border-red-500 hover:shadow-md transition-all text-left group"
+                  >
+                    <div className="flex items-center mb-2">
+                      <div className="p-2 bg-red-50 dark:bg-red-900/30 rounded-lg mr-3 text-red-600 dark:text-red-400">
+                        <ShieldAlert size={18} />
+                      </div>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">Security Audit</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Identify critical vulnerabilities and required actions.</p>
+                  </button>
+
+                  <button 
+                     onClick={() => handleSendMessage("List all deprecations effective in the next 90 days.")}
+                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-md transition-all text-left group"
+                  >
+                    <div className="flex items-center mb-2">
+                      <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg mr-3 text-amber-600 dark:text-amber-400">
+                        <TrendingUp size={18} />
+                      </div>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">Deprecation Check</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Review upcoming EOLs and migration timelines.</p>
+                  </button>
+
+                  <button 
+                     onClick={() => handleSendMessage("Summarize recent architecture center updates and best practices.")}
+                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md transition-all text-left group"
+                  >
+                    <div className="flex items-center mb-2">
+                      <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg mr-3 text-emerald-600 dark:text-emerald-400">
+                        <Target size={18} />
+                      </div>
+                      <span className="font-bold text-slate-800 dark:text-slate-200">Architecture Trends</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Explore new patterns and reference architectures.</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {messages.length === 0 && loading && (
                <div className="flex flex-col items-center justify-center h-full space-y-6">
                   <div className="relative">
@@ -250,7 +318,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
                       ? 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 text-slate-800 dark:text-slate-200'
                       : 'bg-blue-600 text-white shadow-md'
                   }`}>
-                    <div className={`text-base leading-relaxed prose dark:prose-invert max-w-none ${msg.role === 'user' ? 'text-white prose-headings:text-white prose-p:text-white prose-strong:text-white' : ''}`}>
+                    <div className={`text-base leading-relaxed prose dark:prose-invert max-w-none ${msg.role === 'user' ? 'text-white prose-headings:text-white prose-p:text-white prose-strong:text-white prose-a:text-blue-100' : ''}`}>
                       <ReactMarkdown components={msg.role === 'model' ? MarkdownComponents : undefined}>
                         {msg.content}
                       </ReactMarkdown>

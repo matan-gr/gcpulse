@@ -19,9 +19,6 @@ export function useTheme() {
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Debug log
-    console.log(`[Theme] Applying theme: ${theme}`);
-
     // Strict class manipulation
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
@@ -44,7 +41,6 @@ export function useTheme() {
   const toggleTheme = () => {
     setTheme((prev) => {
       const newTheme = prev === 'light' ? 'dark' : 'light';
-      console.log(`[Theme] Toggling to: ${newTheme}`);
       return newTheme;
     });
   };
