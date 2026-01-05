@@ -76,6 +76,7 @@ export const GeminiAssistantView: React.FC<GeminiAssistantViewProps> = ({ items,
     p: ({...props}: any) => (
       <p className="mb-4 leading-7 text-slate-700 dark:text-slate-300" {...props} />
     ),
+    pre: ({children}: any) => <>{children}</>,
     a: ({...props}: any) => (
       <a className="text-blue-600 dark:text-blue-400 hover:underline font-medium break-all transition-colors inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer" {...props} />
     ),
