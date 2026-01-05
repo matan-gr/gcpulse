@@ -1,14 +1,12 @@
-/* Import Fonts handled in index.html for performance */
-
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
-  /* Enterprise Semantic Colors (Refined & Vibrant) */
+  /* ... rest of theme ... */
   --color-brand-primary: #2563eb; /* blue-600 */
   --color-brand-secondary: #4f46e5; /* indigo-600 */
   --color-brand-accent: #0ea5e9; /* sky-500 */
@@ -32,58 +30,103 @@
   --color-border-dark: #1e293b; /* slate-800 */
 }
 
-body {
-  font-family: var(--font-sans);
-  @apply antialiased text-[var(--color-text-primary)] dark:text-[var(--color-text-primary-dark)] bg-[var(--color-bg-app)] dark:bg-[var(--color-bg-app-dark)];
-  /* Light mode: Premium mesh gradient */
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.03) 0px, transparent 50%);
-  background-attachment: fixed;
-}
+@layer base {
+  :root {
+    --background: 210 40% 98%; /* Slate 50 */
+    --foreground: 222 47% 11%; /* Slate 900 */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+ 
+    --primary: 221 83% 53%; /* Blue 600 */
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-/* Dark mode background enhancement */
-:is(.dark body) {
-  background-image: 
-    radial-gradient(circle at 50% -20%, rgba(30, 58, 138, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 1) 0%, transparent 100%);
-}
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+ 
+    --radius: 0.75rem;
+  }
+ 
+  .dark {
+    --background: 222 47% 11%; /* Slate 950 */
+    --foreground: 210 40% 98%;
+ 
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+ 
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20% 65%;
+ 
+    --accent: 217 19% 27%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 224 76% 48%;
+  }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-[#0B1120] dark:text-slate-100 dark:selection:bg-blue-900/30 dark:selection:text-blue-100;
+    font-feature-settings: "cv11", "ss01";
+    /* Light mode: Premium mesh gradient */
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(236, 72, 153, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
 
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
+  /* Dark mode background enhancement */
+  :is(.dark body) {
+    background-image: 
+      radial-gradient(circle at 50% -20%, rgba(30, 58, 138, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 1) 0%, transparent 100%);
+  }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  /* Enterprise Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors;
+  }
 }
-
-/* Glassmorphism Utilities - Refined */
-.glass {
-  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/60 dark:border-slate-800/60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/70;
-}
-
-.glass-card {
-  @apply bg-white/70 dark:bg-slate-900/90 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300;
-}
-
-.mask-linear-fade {
-  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-}
-
-/* Text Gradients */
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400;
-}
-
-/* Component Classes */
 
 @layer components {
   /* Buttons */
@@ -121,11 +164,11 @@ body {
 
   /* Cards - Enhanced for Light Mode */
   .card {
-    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden relative;
+    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative transition-all duration-300;
   }
 
   .card-hover {
-    @apply hover:shadow-xl hover:-translate-y-1 hover:border-blue-200/60 dark:hover:border-blue-600/40 transition-all duration-300 hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10;
+    @apply hover:shadow-xl hover:-translate-y-0.5 hover:border-blue-300/50 dark:hover:border-blue-700/50 hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10;
   }
 
   /* Tech Border Effect */
@@ -138,19 +181,24 @@ body {
     @apply shadow-[0_0_15px_rgba(59,130,246,0.1)] dark:shadow-[0_0_15px_rgba(59,130,246,0.2)];
   }
 
+  /* Glass Panel - Premium Background */
+  .glass-panel {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-lg;
+  }
+
   /* Badges - More Vibrant */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shadow-sm transition-colors;
   }
 
   .badge-blue {
     @apply bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/20;
   }
-
+  
   .badge-green {
     @apply bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20;
   }
-
+  
   .badge-orange {
     @apply bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-500/20;
   }
@@ -175,6 +223,25 @@ body {
 
   .sidebar-link-active {
     @apply bg-blue-50/80 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold shadow-sm border-blue-100 dark:border-blue-500/20;
+  }
+  
+  /* Glassmorphism Utilities - Refined */
+  .glass {
+    @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-white/60 dark:border-slate-800/60 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-900/70;
+  }
+
+  .glass-card {
+    @apply bg-white/70 dark:bg-slate-900/90 backdrop-blur-md border border-white/60 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300;
+  }
+  
+  .mask-linear-fade {
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  /* Text Gradients */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400;
   }
 }
 
@@ -211,6 +278,19 @@ h1, h2, h3, h4, h5, h6 {
 
 .prose ul > li::marker {
   @apply text-slate-400 dark:text-slate-500;
+}
+
+/* Custom Utilities */
+.text-balance {
+  text-wrap: balance;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.slate.300') transparent;
+}
+.dark .custom-scrollbar {
+  scrollbar-color: theme('colors.slate.700') transparent;
 }
 
 /* Print Styles for Executive Briefing */

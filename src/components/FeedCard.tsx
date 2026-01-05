@@ -162,22 +162,24 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
         {/* Status Header */}
         <div className={`px-5 py-3 border-b ${cardBorder} dark:border-opacity-20 ${status === 'Resolved' ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : status === 'Monitoring' ? 'bg-amber-50/50 dark:bg-amber-900/10' : 'bg-red-50/50 dark:bg-red-900/10'} flex justify-between items-center`}>
            <div className="flex items-center space-x-2">
-              {status === 'Resolved' ? <Check size={16} className={iconColor} /> : <AlertOctagon size={16} className={iconColor} />}
+              <div className={`p-1 rounded-full ${status === 'Resolved' ? 'bg-emerald-100 text-emerald-600' : status === 'Monitoring' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600'} dark:bg-opacity-20`}>
+                {status === 'Resolved' ? <Check size={14} /> : <AlertOctagon size={14} />}
+              </div>
               <span className={`text-xs font-bold uppercase tracking-wider ${iconColor}`}>
                 {status}
               </span>
            </div>
-           <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center">
+           <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center bg-white/50 dark:bg-black/20 px-2 py-1 rounded-full">
               <Clock size={10} className="mr-1" />
-              {new Date(item.isoDate).toLocaleString()}
+              {new Date(item.isoDate).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
            </span>
         </div>
 
         <div className={`${isCompact ? 'p-3' : 'p-5'} flex flex-col flex-1 relative`}>
           {item.serviceName && (
-            <div className="mb-2">
-              <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                <Box size={10} className="mr-1" />
+            <div className="mb-3">
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                <Box size={10} className="mr-1.5" />
                 {item.serviceName}
               </span>
             </div>
@@ -199,18 +201,24 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
             </a>
           </h3>
 
-          <p className={`text-slate-600 dark:text-slate-300 text-sm mb-4 z-10 relative flex-1 leading-relaxed ${isPresentationMode ? 'line-clamp-4' : 'line-clamp-3'}`}>
-            {item.contentSnippet}
-          </p>
+          <div className={`text-slate-600 dark:text-slate-300 text-sm mb-4 z-10 relative flex-1 leading-relaxed ${isPresentationMode ? 'line-clamp-4' : 'line-clamp-3'} prose dark:prose-invert max-w-none prose-sm`}>
+             <ReactMarkdown 
+                  components={{
+                    a: ({node, ...props}) => <a {...props} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} />
+                  }}
+                >
+                  {item.contentSnippet || ''}
+                </ReactMarkdown>
+          </div>
 
           <div className="mt-auto z-10 flex items-center justify-between relative pt-4 border-t border-slate-100 dark:border-slate-800/50">
             <a 
                 href={item.link} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`inline-flex items-center text-xs font-bold hover:underline transition-colors ${iconColor}`}
+                className={`inline-flex items-center text-xs font-bold hover:underline transition-colors ${iconColor} bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md`}
             >
-                View Incident <ArrowRight size={12} className="ml-1" />
+                View Incident Details <ArrowRight size={12} className="ml-1" />
             </a>
             
             {!isPresentationMode && (
@@ -221,10 +229,10 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
                       onSummarize(item);
                     }}
                     disabled={isSummarizing}
-                    className={`p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${iconColor}`}
+                    className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-purple-600`}
                     title="Summarize Incident"
                 >
-                  {isSummarizing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {isSummarizing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                 </button>
               </div>
             )}
@@ -338,6 +346,7 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
           ) }
           
           <h3 className={`font-bold text-slate-900 dark:text-white ${isCompact ? 'mb-1 text-sm' : 'mb-3 text-lg'} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight`}>
+              {/* External link with security attributes */}
               <a href={item.link} target="_blank" rel="noopener noreferrer" className="focus:outline-none">
                   {item.title}
               </a>
@@ -409,7 +418,7 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
           )}
         </div>
         
-        <div className={`mt-auto ${!isListView ? `pt-4 border-t border-slate-50 dark:border-slate-800/50 ${isCompact ? 'pt-2' : 'pt-4'}` : ''}`}>
+          <div className={`mt-auto ${!isListView ? `pt-4 border-t border-slate-100 dark:border-slate-800/50 ${isCompact ? 'pt-2' : 'pt-4'}` : ''}`}>
             <div className="flex items-center justify-between">
                 <a 
                     href={item.link} 
@@ -421,11 +430,11 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
                 </a>
 
                 {!isPresentationMode && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-2">
                   <Tooltip content="Copy Link" position="top">
                     <button
                       onClick={handleCopyLink}
-                      className="btn-icon"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                       aria-label="Copy Link"
                     >
                       <LinkIcon size={14} />
@@ -438,7 +447,11 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
                         e.stopPropagation();
                         onSave(item);
                       }}
-                      className={`btn-icon ${isSaved ? 'text-blue-600 dark:text-blue-400' : ''}`}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isSaved 
+                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                          : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                       aria-label={isSaved ? "Remove from Read Later" : "Read Later"}
                     >
                       <Bookmark size={14} className={isSaved ? "fill-current" : ""} />
@@ -452,11 +465,11 @@ const FeedCardContent: React.FC<FeedCardProps> = ({
                           onSummarize(item);
                         }}
                         disabled={isSummarizing}
-                        className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-[10px] font-bold disabled:opacity-50"
+                        className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-[10px] font-bold disabled:opacity-50 ring-1 ring-purple-100 dark:ring-purple-800/30"
                         aria-label="Generate AI Summary"
                     >
-                        {isSummarizing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="mr-1" />}
-                        {isSummarizing ? '' : 'AI'}
+                        {isSummarizing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} className="mr-1.5" />}
+                        {isSummarizing ? '' : 'AI Summary'}
                     </button>
                   </Tooltip>
                 </div>

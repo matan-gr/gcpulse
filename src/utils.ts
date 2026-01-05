@@ -54,3 +54,32 @@ export function extractEOLDate(text: string): Date | null {
 
   return null;
 }
+
+export function calculateRelevanceScore(item: any, query: string): number {
+  if (!query) return 0;
+  
+  const lowerQuery = query.toLowerCase();
+  const terms = lowerQuery.split(/\s+/).filter(t => t.length > 0);
+  
+  let score = 0;
+  const title = (item.title || "").toLowerCase();
+  const content = (item.contentSnippet || item.content || "").toLowerCase();
+  const categories = (item.categories || []).map((c: string) => c.toLowerCase());
+
+  // Exact phrase match bonus
+  if (title.includes(lowerQuery)) score += 20;
+  if (content.includes(lowerQuery)) score += 5;
+
+  terms.forEach(term => {
+    // Title matches (highest weight)
+    if (title.includes(term)) score += 10;
+    
+    // Category matches (medium weight)
+    if (categories.some((c: string) => c.includes(term))) score += 5;
+    
+    // Content matches (lower weight)
+    if (content.includes(term)) score += 1;
+  });
+
+  return score;
+}

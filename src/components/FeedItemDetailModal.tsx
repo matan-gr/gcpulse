@@ -67,19 +67,19 @@ export const FeedItemDetailModal: React.FC<FeedItemDetailModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed z-50 w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            className="fixed z-50 w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ring-1 ring-slate-900/5"
           >
             {/* Header */}
-            <div className="flex items-start justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 z-10">
+            <div className="flex items-start justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 sticky top-0">
               <div className="flex-1 pr-8">
                 <div className="flex items-center space-x-3 mb-3">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${
                     item.source === 'Release Notes' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-900/30' :
                     item.source === 'Product Updates' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/30' :
                     'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/30'
@@ -87,13 +87,13 @@ export const FeedItemDetailModal: React.FC<FeedItemDetailModalProps> = ({
                     {item.source}
                   </span>
                   {isIncident && (
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border flex items-center ${statusColor}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center shadow-sm ${statusColor}`}>
                       <StatusIcon size={12} className="mr-1" />
                       {status}
                     </span>
                   )}
-                  <span className="text-sm text-slate-500 flex items-center">
-                    <Clock size={14} className="mr-1.5" />
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 flex items-center uppercase tracking-wide">
+                    <Clock size={12} className="mr-1.5" />
                     {date}
                   </span>
                 </div>
@@ -103,42 +103,45 @@ export const FeedItemDetailModal: React.FC<FeedItemDetailModalProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
 
             {/* Scrollable Content */}
             <div className="overflow-y-auto p-6 custom-scrollbar">
               {image && (
-                <div className="mb-6 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800">
+                <div className="mb-8 rounded-xl overflow-hidden shadow-md ring-1 ring-slate-900/5">
                   <img src={image} alt={item.title} className="w-full h-64 object-cover" />
                 </div>
               )}
 
               {/* AI Analysis Section */}
               {analysis && (
-                <div className="mb-8 bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/10 dark:to-slate-800/50 rounded-xl border border-purple-100 dark:border-purple-800/30 p-5">
-                  <div className="flex items-center mb-3">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400 mr-3">
-                      <Sparkles size={20} />
+                <div className="mb-8 bg-gradient-to-br from-purple-50/50 to-white dark:from-purple-900/10 dark:to-slate-800/30 rounded-2xl border border-purple-100 dark:border-purple-800/30 p-6 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <Sparkles size={100} />
+                  </div>
+                  <div className="flex items-center mb-4 relative z-10">
+                    <div className="p-2 bg-white dark:bg-slate-800 rounded-lg text-purple-600 dark:text-purple-400 mr-3 shadow-sm border border-purple-100 dark:border-purple-900/30">
+                      <Sparkles size={18} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white">AI Insight</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Powered by Gemini 2.5 Flash</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">AI Insight</h3>
+                      <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Powered by Gemini 2.5 Flash</p>
                     </div>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6 mt-4">
+                  <div className="grid md:grid-cols-2 gap-8 mt-2 relative z-10">
                     <div>
-                      <h4 className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-2">Executive Summary</h4>
+                      <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Executive Summary</h4>
                       <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                         {analysis.summary}
                       </p>
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-2">Business Impact</h4>
+                      <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Business Impact</h4>
                       <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                         {analysis.impact}
                       </p>
@@ -146,11 +149,11 @@ export const FeedItemDetailModal: React.FC<FeedItemDetailModalProps> = ({
                   </div>
 
                   {analysis.relatedProducts && analysis.relatedProducts.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-purple-100 dark:border-purple-800/30">
-                       <h4 className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide mb-2">Related Products</h4>
+                    <div className="mt-6 pt-4 border-t border-purple-100 dark:border-purple-800/30 relative z-10">
+                       <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Related Products</h4>
                        <div className="flex flex-wrap gap-2">
                          {analysis.relatedProducts.map(prod => (
-                           <span key={prod} className="px-2 py-1 bg-white dark:bg-slate-900 border border-purple-100 dark:border-purple-800/30 rounded text-xs font-medium text-slate-600 dark:text-slate-300">
+                           <span key={prod} className="px-2.5 py-1 bg-white dark:bg-slate-800 border border-purple-100 dark:border-purple-800/30 rounded-md text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm">
                              {prod}
                            </span>
                          ))}

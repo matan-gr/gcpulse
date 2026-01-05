@@ -99,10 +99,12 @@ export const FeedColumn: React.FC<FeedColumnProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className={`flex items-center space-x-2 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700`}>
-        <div className={`w-3 h-8 rounded-full ${barColor}`}></div>
-        <h2 className={`text-lg font-bold ${headerColor}`}>{source}</h2>
-        <span className={`${badgeColor} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
+      <div className={`flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800 group`}>
+        <div className="flex items-center space-x-3">
+          <div className={`w-1.5 h-6 rounded-full ${barColor} group-hover:scale-y-125 transition-transform`}></div>
+          <h2 className={`text-lg font-bold ${headerColor} tracking-tight`}>{source}</h2>
+        </div>
+        <span className={`${badgeColor} text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm`}>
           {items.length}
         </span>
       </div>
@@ -141,25 +143,31 @@ export const FeedColumn: React.FC<FeedColumnProps> = ({
             </AnimatePresence>
             
             {hasMore && (
-              <div ref={ref} className="flex justify-center py-4">
-                 <div className="flex items-center space-x-2 text-slate-400 text-sm">
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Loading more...</span>
+              <div ref={ref} className="flex justify-center py-6">
+                 <div className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-slate-900 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 text-slate-400 text-xs font-medium">
+                    <Loader2 size={14} className="animate-spin text-blue-500" />
+                    <span>Loading updates...</span>
                  </div>
               </div>
             )}
           </>
         ) : (
-          <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 text-center">
+          <div className="p-8 bg-slate-50/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center min-h-[200px]">
             {source === 'Service Health' ? (
                 <>
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check size={24} className="text-green-600 dark:text-green-400" />
+                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mb-4 shadow-sm border border-emerald-100 dark:border-emerald-800/30">
+                  <Check size={32} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <p className="text-green-800 dark:text-green-300 font-medium">All systems operational</p>
+                <p className="text-emerald-900 dark:text-emerald-200 font-bold text-sm">All systems operational</p>
+                <p className="text-emerald-600 dark:text-emerald-400 text-xs mt-1">No active incidents reported</p>
                 </>
             ) : (
-              <p className="text-gray-400 dark:text-gray-500 text-sm italic">No recent updates</p>
+              <>
+                <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
+                  <ChevronDown size={20} className="text-slate-400" />
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No recent updates</p>
+              </>
             )}
           </div>
         )}

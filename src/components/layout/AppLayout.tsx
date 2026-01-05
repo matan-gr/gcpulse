@@ -55,6 +55,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const { theme, toggleTheme } = useTheme();
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
 
+  // Debug: Log class list on render
+  console.log('[AppLayout] Current HTML classes:', document.documentElement.classList.toString());
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 flex">
       

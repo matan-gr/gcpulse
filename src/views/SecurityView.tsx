@@ -4,6 +4,7 @@ import { ShieldAlert, ShieldCheck, Search, Filter, AlertTriangle, CheckCircle, E
 import { motion, AnimatePresence } from 'motion/react';
 import { useSecurityView } from '../hooks/useSecurityView';
 import DOMPurify from 'dompurify';
+import { PageHeader } from '../components/ui/PageHeader';
 
 interface SecurityViewProps {
   items: FeedItem[];
@@ -43,22 +44,22 @@ export const SecurityView: React.FC<SecurityViewProps> = ({
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       
-      {/* Header & Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500">
-            <Shield size={100} />
-          </div>
-          <div className="relative z-10">
-            <p className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Bulletins</p>
-            <h3 className="text-4xl font-extrabold">{processedData.stats.total}</h3>
-            <div className="mt-4 flex items-center text-blue-100 text-sm">
-              <Activity size={14} className="mr-1" />
-              <span>Active Monitoring</span>
-            </div>
-          </div>
-        </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Security Bulletins"
+        description="Official security notices and vulnerability reports. Stay informed about potential risks and recommended mitigations for your Google Cloud environment."
+        badge="Vulnerability Management"
+        icon={ShieldCheck}
+        gradient="from-blue-700 to-indigo-800"
+        stats={[
+          { label: 'Total Bulletins', value: processedData.stats.total },
+          { label: 'Critical', value: processedData.stats.critical },
+          { label: 'High', value: processedData.stats.high }
+        ]}
+      />
 
+      {/* Stats Grid (Simplified) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard 
           label="Critical Severity" 
           value={processedData.stats.critical} 
@@ -151,25 +152,30 @@ const SecurityItemCard = ({ item, index, onSummarize, summarizingId }: { item: F
   const contentToRender = item.content || item.contentSnippet || '';
   const sanitizedContent = DOMPurify.sanitize(contentToRender);
 
+  // Determine border color based on severity
+  const borderColor = 
+    item.severity === 'Critical' ? 'border-l-red-600 dark:border-l-red-500' :
+    item.severity === 'High' ? 'border-l-orange-500 dark:border-l-orange-500' :
+    item.severity === 'Medium' ? 'border-l-yellow-500 dark:border-l-yellow-500' :
+    'border-l-blue-500 dark:border-l-blue-500';
+
+  // Determine background tint for critical items
+  const bgTint = item.severity === 'Critical' ? 'bg-red-50/30 dark:bg-red-900/10' : 'bg-white dark:bg-slate-900';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ delay: index * 0.05 }}
-      className={`group relative rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-lg bg-white dark:bg-slate-900 ${
-        item.severity === 'Critical' ? 'border-l-[6px] border-l-red-500 border-slate-200 dark:border-slate-800' :
-        item.severity === 'High' ? 'border-l-[6px] border-l-orange-500 border-slate-200 dark:border-slate-800' :
-        item.severity === 'Medium' ? 'border-l-[6px] border-l-yellow-500 border-slate-200 dark:border-slate-800' :
-        'border-l-[6px] border-l-blue-500 border-slate-200 dark:border-slate-800'
-      }`}
+      className={`group relative rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-lg ${bgTint} ${borderColor} border-l-[6px] border-slate-200 dark:border-slate-800`}
     >
       <div className="p-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
           <div className="space-y-3 flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <SeverityBadge severity={item.severity} />
-              <span className="text-xs font-medium text-slate-500 flex items-center bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+              <span className="text-xs font-medium text-slate-500 flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-md shadow-sm">
                 {new Date(item.isoDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
             </div>
@@ -184,9 +190,9 @@ const SecurityItemCard = ({ item, index, onSummarize, summarizingId }: { item: F
             <button 
               onClick={() => onSummarize(item)}
               disabled={summarizingId === item.link}
-              className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 hover:from-purple-100 hover:to-indigo-100 dark:hover:from-purple-900/30 dark:hover:to-indigo-900/30 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold transition-all disabled:opacity-50 border border-purple-100 dark:border-purple-800/50 shadow-sm hover:shadow"
+              className="flex items-center px-4 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all disabled:opacity-50 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow"
             >
-              <Zap size={14} className={`mr-2 ${summarizingId === item.link ? 'animate-spin' : 'fill-purple-500 text-purple-600'}`} />
+              <Zap size={14} className={`mr-2 ${summarizingId === item.link ? 'animate-spin text-purple-600' : 'text-slate-400'}`} />
               {summarizingId === item.link ? 'Analyzing...' : 'AI Analysis'}
             </button>
             <a 
@@ -220,14 +226,14 @@ const SecurityItemCard = ({ item, index, onSummarize, summarizingId }: { item: F
         </button>
 
         {item.products.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-5 border-t border-slate-100 dark:border-slate-800 mt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-5 border-t border-slate-200/50 dark:border-slate-700/50 mt-4">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center shrink-0">
               <Search size={12} className="mr-1.5" />
               Affected Products
             </span>
             <div className="flex flex-wrap gap-2">
               {item.products.slice(0, 6).map(prod => (
-                <span key={prod} className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-default">
+                <span key={prod} className="px-2.5 py-1 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded-md font-medium border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-default shadow-sm">
                   {prod}
                 </span>
               ))}

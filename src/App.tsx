@@ -15,6 +15,7 @@ import { useSummarizer } from './hooks/useSummarizer';
 import { ErrorDisplay } from './components/ErrorDisplay';
 import { PageLoader } from './components/ui/PageLoader';
 import { DebugConsole } from './components/debug/DebugConsole';
+import { calculateRelevanceScore } from './utils';
 
 // Layout & Navigation
 import { AppLayout } from './components/layout/AppLayout';
@@ -49,9 +50,16 @@ function AppContent() {
   const { data: deprecations, isLoading: deprecationsLoading, error: deprecationsError } = useDeprecations();
   const { data: securityBulletins, isLoading: securityLoading, error: securityError } = useSecurityBulletins();
   const { data: architectureUpdates, isLoading: architectureLoading, error: architectureError } = useArchitectureUpdates();
-  const { data: incidents, isLoading: incidentsLoading, error: incidentsError } = useIncidents();
+  const { data: incidents, isLoading: incidentsLoading, error: incidentsError, refetch: refetchIncidents, isRefetching: incidentsRefetching } = useIncidents();
   
   const loading = feedLoading || (activeTab === 'architecture' && architectureLoading) || (activeTab === 'incidents' && incidentsLoading); // Main loading state
+
+  // Refresh Handler
+  const handleRefresh = () => {
+    refetchFeed();
+    refetchIncidents();
+    toast.info("Refreshing data sources...");
+  };
 
   // Custom Hooks
   const { prefs, updatePrefs, toggleCategorySubscription, toggleSavedPost, clearSavedPosts } = useUserPreferences();
@@ -214,12 +222,20 @@ function AppContent() {
       const smartLinks = new Set(smartItems.map(i => i.link));
       items = items.filter(item => smartLinks.has(item.link));
     } else if (search) {
-      const lowerSearch = search.toLowerCase();
-      items = items.filter(item => 
-        item.title.toLowerCase().includes(lowerSearch) || 
-        item.contentSnippet?.toLowerCase().includes(lowerSearch) ||
-        item.categories?.some(cat => cat.toLowerCase().includes(lowerSearch))
-      );
+      // Weighted Search
+      const scoredItems = items.map(item => ({
+        item,
+        score: calculateRelevanceScore(item, search)
+      }));
+
+      items = scoredItems
+        .filter(si => si.score > 0)
+        .sort((a, b) => {
+          // Sort by score desc, then by date desc
+          if (b.score !== a.score) return b.score - a.score;
+          return new Date(b.item.isoDate).getTime() - new Date(a.item.isoDate).getTime();
+        })
+        .map(si => si.item);
     }
 
     if (selectedCategory) items = items.filter(item => item.categories?.includes(selectedCategory));
@@ -298,6 +314,8 @@ function AppContent() {
               <DashboardView 
                 items={allItems} 
                 onNavigateToIncidents={() => setActiveTab('incidents')}
+                onRefresh={handleRefresh}
+                isRefreshing={feedRefetching || incidentsRefetching}
               />
             ) : activeTab === 'assistant' ? (
               <GeminiAssistantView items={allItems} />

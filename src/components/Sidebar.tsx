@@ -53,15 +53,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className={`fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 z-[50] shadow-2xl lg:shadow-none flex flex-col`}
           >
             {/* Logo Area */}
-            <div className="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800/50 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-900/10 pointer-events-none" />
+            <div className="h-20 flex items-center px-6 border-b border-slate-100 dark:border-slate-800/50 relative overflow-hidden bg-white/50 dark:bg-slate-900/50">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/80 to-transparent dark:from-blue-900/20 pointer-events-none" />
               <div className="flex items-center space-x-3 relative z-10">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 text-white">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 text-white ring-1 ring-white/20">
                   <Zap size={20} className="fill-current" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">GCP Pulse</h1>
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Intelligence</span>
+                  <h1 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight leading-none">GCP Pulse</h1>
+                  <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest opacity-90">Intelligence</span>
                 </div>
               </div>
             </div>
@@ -95,9 +95,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }
               ].map((section, idx) => (
                 <div key={idx}>
-                  <div className="flex items-center px-4 mb-3">
-                    <span className="text-[10px] font-bold text-[var(--color-text-secondary)] dark:text-[var(--color-text-secondary-dark)] uppercase tracking-widest">{section.title}</span>
-                    <div className="flex-1 h-px bg-[var(--color-border)] dark:bg-[var(--color-border-dark)] ml-3" />
+                  <div className="flex items-center px-4 mb-3 group">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{section.title}</span>
+                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800 ml-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors" />
                   </div>
                   <div className="space-y-1">
                     {section.items.map((item) => {
@@ -113,14 +113,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }}
                           className={`relative w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group overflow-hidden ${
                             isActive 
-                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm' 
-                              : 'text-[var(--color-text-secondary)] dark:text-[var(--color-text-secondary-dark)] hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-[var(--color-text-primary)] dark:hover:text-[var(--color-text-primary-dark)]'
+                              ? 'text-blue-700 dark:text-blue-400' 
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
                           }`}
                         >
                           {isActive && (
                             <motion.div
                               layoutId="activeTabBackground"
-                              className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
+                              className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-500/20 shadow-sm"
                               initial={false}
                               transition={{ type: "spring", stiffness: 500, damping: 30 }}
                             />
@@ -130,7 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             <div className={`p-1.5 rounded-lg transition-colors ${
                               isActive 
                                 ? 'bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300' 
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300 group-hover:bg-white dark:group-hover:bg-slate-700 shadow-sm'
                             }`}>
                               <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                             </div>

@@ -3,10 +3,11 @@ import { FeedItem } from '../types';
 import { StatusDashboard } from '../components/StatusDashboard';
 import { FeedColumn } from '../components/FeedColumn';
 import { AnalysisResult } from '../types';
-import { Loader2, LayoutTemplate, Image as ImageIcon, AlignJustify, Grid, Columns, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Loader2, LayoutTemplate, Image as ImageIcon, AlignJustify, Grid, Columns, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown, Compass, Sparkles } from 'lucide-react';
 import { useDiscoverView } from '../hooks/useDiscoverView';
 import { UserPreferences } from '../hooks/useUserPreferences';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
+import { PageHeader } from '../components/ui/PageHeader';
 
 interface DiscoverViewProps {
   items: FeedItem[];
@@ -68,7 +69,23 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
+      {/* Page Header */}
+      {!isPresentationMode && (
+        <PageHeader
+          title="Discover Feed"
+          description="Your personalized intelligence stream. Stay ahead with real-time updates across Google Cloud products, engineering blogs, and release notes."
+          badge="Live Intelligence"
+          icon={Compass}
+          gradient="from-blue-600 to-indigo-700"
+          stats={[
+            { label: 'Sources', value: items.length > 0 ? '12+' : '-' },
+            { label: 'Updates Today', value: items.filter(i => new Date(i.isoDate).toDateString() === new Date().toDateString()).length },
+            { label: 'Active Columns', value: visibleColumns.length }
+          ]}
+        />
+      )}
+
       {/* Status Dashboard */}
       {!loading && items.length > 0 && (
         <StatusDashboard 
